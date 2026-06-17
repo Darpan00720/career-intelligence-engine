@@ -23,3 +23,13 @@ __pycache__/
 # Logs — runtime output, not source
 data/logs/
 *.log
+# Runtime databases
+*.db
+*.db-shm
+*.db-wal
+
+# Embeddings cache
+data/embeddings/
+
+# Local runtime artifacts
+data/langgraph_checkpoints*
