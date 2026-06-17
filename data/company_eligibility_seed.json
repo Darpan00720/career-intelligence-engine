@@ -1,0 +1,125 @@
+{
+  "_comment": "Company eligibility intelligence seed data. All scores on 0-10 scale.",
+  "seed_version": "1.0",
+  "companies": [
+    {
+      "company_name": "Amazon",
+      "visa_friendliness_score": 10,
+      "english_environment_score": 10,
+      "international_student_score": 9,
+      "mba_friendliness_score": 9
+    },
+    {
+      "company_name": "Google",
+      "visa_friendliness_score": 10,
+      "english_environment_score": 10,
+      "international_student_score": 10,
+      "mba_friendliness_score": 10
+    },
+    {
+      "company_name": "Microsoft",
+      "visa_friendliness_score": 10,
+      "english_environment_score": 10,
+      "international_student_score": 9,
+      "mba_friendliness_score": 9
+    },
+    {
+      "company_name": "Meta",
+      "visa_friendliness_score": 9,
+      "english_environment_score": 10,
+      "international_student_score": 9,
+      "mba_friendliness_score": 8
+    },
+    {
+      "company_name": "Revolut",
+      "visa_friendliness_score": 8,
+      "english_environment_score": 9,
+      "international_student_score": 9,
+      "mba_friendliness_score": 7
+    },
+    {
+      "company_name": "Klarna",
+      "visa_friendliness_score": 7,
+      "english_environment_score": 9,
+      "international_student_score": 8,
+      "mba_friendliness_score": 7
+    },
+    {
+      "company_name": "Stripe",
+      "visa_friendliness_score": 9,
+      "english_environment_score": 10,
+      "international_student_score": 9,
+      "mba_friendliness_score": 8
+    },
+    {
+      "company_name": "SAP",
+      "visa_friendliness_score": 7,
+      "english_environment_score": 7,
+      "international_student_score": 7,
+      "mba_friendliness_score": 8
+    },
+    {
+      "company_name": "Accenture",
+      "visa_friendliness_score": 8,
+      "english_environment_score": 8,
+      "international_student_score": 8,
+      "mba_friendliness_score": 9
+    },
+    {
+      "company_name": "Deloitte",
+      "visa_friendliness_score": 7,
+      "english_environment_score": 8,
+      "international_student_score": 7,
+      "mba_friendliness_score": 9
+    },
+    {
+      "company_name": "EY",
+      "visa_friendliness_score": 7,
+      "english_environment_score": 8,
+      "international_student_score": 7,
+      "mba_friendliness_score": 8
+    },
+    {
+      "company_name": "EY Italy",
+      "visa_friendliness_score": 2,
+      "english_environment_score": 3,
+      "international_student_score": 3,
+      "mba_friendliness_score": 5
+    },
+    {
+      "company_name": "PwC",
+      "visa_friendliness_score": 7,
+      "english_environment_score": 8,
+      "international_student_score": 7,
+      "mba_friendliness_score": 8
+    },
+    {
+      "company_name": "KPMG",
+      "visa_friendliness_score": 6,
+      "english_environment_score": 7,
+      "international_student_score": 6,
+      "mba_friendliness_score": 8
+    },
+    {
+      "company_name": "McKinsey",
+      "visa_friendliness_score": 9,
+      "english_environment_score": 10,
+      "international_student_score": 9,
+      "mba_friendliness_score": 10
+    },
+    {
+      "company_name": "BCG",
+      "visa_friendliness_score": 9,
+      "english_environment_score": 10,
+      "international_student_score": 9,
+      "mba_friendliness_score": 10
+    },
+    {
+      "company_name": "Bain",
+      "visa_friendliness_score": 8,
+      "english_environment_score": 10,
+      "international_student_score": 8,
+      "mba_friendliness_score": 10
+    }
+  ]
+}

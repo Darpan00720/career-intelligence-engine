@@ -1,0 +1,178 @@
+job_id,company,title,location,current_bucket,rejection_reason,total_score
+22,SumUp,Data Analyst - CoreOps,"Santiago, Chile",Ignore,unknown_reject,27
+39,SumUp,Senior Logistics Analyst - Americas,"Santiago, Chile",Ignore,unknown_reject,32
+44,SumUp,Sr. Growth Analyst – Marketing & Comms,"Santiago, Chile",Ignore,unknown_reject,25
+51,Stripe,Accounts Receivable Analyst,Bengaluru,Low Priority,non_eu,45
+52,Stripe,"Backend/API Engineer, Money as a Service",US,Ignore,non_eu,33
+53,Stripe,"Backend Engineer, Payments and Risk",US,Ignore,non_eu,33
+54,Stripe,Bridge - Operations Associate,Bengaluru,Low Priority,non_eu,44
+56,Stripe,"Credit Risk Analyst, North American Underwriter","Toronto, Remote-Canada",Low Priority,non_eu,38
+59,Stripe,Finance & Strategy Analyst,"CHI, SEA, NYC, SF",High Priority,non_eu,73
+60,Stripe,Fraud Patterns Analyst,US-Remote,Ignore,non_eu,33
+61,Stripe,F&S COE Analyst,Bengaluru,Low Priority,non_eu,38
+62,Stripe,"Full Stack Engineer, Money as a Service",N/A,Ignore,unknown_reject,32
+63,Stripe,Monetization Operations Analyst,IN - Bengaluru,Ignore,non_eu,33
+64,Stripe,"Operations Associate, GTM Accelerate (Bangalore)",Bengaluru,Low Priority,non_eu,35
+65,Stripe,Payments Analyst,LOCATION,Ignore,unknown_reject,34
+67,Stripe,"Product Manager, Commerce Systems","SF, SEA, NYC, US - Remote",Medium Priority,non_eu,62
+68,Stripe,"Product Manager - Compliance, Bridge","New York, San Francisco or Remote",Medium Priority,non_eu,62
+72,Stripe,"Product Manager, Growth AI Outreach Motion","Toronto, Remote- Canada",High Priority,non_eu,80
+73,Stripe,"Product Manager, Infrastructure",Remote in the US,Medium Priority,non_eu,67
+74,Stripe,"Product Manager, Link Consumer Product","SF, SEA, NY, Remote-US",Medium Priority,non_eu,60
+75,Stripe,"Product Manager, Payments","SF, NY, SEA, Remote-US",High Priority,non_eu,74
+76,Stripe,"Product Manager, Risk & Compliance",Bengaluru,High Priority,non_eu,71
+78,Stripe,"Product Support Operations Associate, Weekend Shift",Bengaluru,Ignore,non_eu,30
+81,Stripe,"Risk Operations Analyst, Financial Crimes Programs","Remote, US",Ignore,non_eu,30
+83,Stripe,"Sr. Operations Associate, Sanctions (FinCrime)",Bengaluru,Ignore,non_eu,33
+84,Stripe,Staff Data Analyst,US,Low Priority,non_eu,40
+85,Stripe,"Staff Product Manager, Cards Monetization","Seattle, San Francisco, New York, US - Remote",Medium Priority,non_eu,60
+86,Stripe,"Staff Product Manager, Dashboard","San Francisco, Seattle, NYC, Chicago, Atlanta, US Remote",Medium Priority,non_eu,63
+87,Stripe,"Staff Product Manager, Enterprise (Industries)","San Francisco, Seattle, New York, Chicago, Atlanta, Remote",Medium Priority,non_eu,67
+88,Stripe,"Staff Product Manager, Global Expansion",Bengaluru,Medium Priority,non_eu,64
+91,Stripe,"Staff Product Manager, Payments","SF, SEA, NYC, Remote",Medium Priority,non_eu,60
+92,Stripe,Strategic Sourcing Analyst,Bengaluru,Low Priority,non_eu,35
+93,Adyen,Business Analyst - Pricing,São Paulo,Low Priority,non_eu,43
+97,Adyen,Product Manager,São Paulo,Medium Priority,non_eu,61
+98,Adyen,Senior Business Analyst,São Paulo,Medium Priority,non_eu,66
+110,Ebury,Associate Client Portfolio Management (FX Dealer),Santiago,Ignore,unknown_reject,20
+120,Ebury,Data Analyst - Regulatory Reporting,São Paulo,Ignore,non_eu,20
+139,Ebury,Product Manager - Crypto & Stablecoins,São Paulo,Medium Priority,non_eu,56
+140,Ebury,Product Manager- Financial Crime Prevention,São Paulo,Medium Priority,non_eu,55
+164,Payoneer,Customer Care Associate (Japanese Speaking),"Seoul, South Korea",Ignore,unknown_reject,14
+166,Marqeta,Junior Account Manager (Contractor),"Remote, USA",Ignore,non_eu,16
+167,Marqeta,Sales Enablement Associate,"Remote, USA",Ignore,non_eu,20
+168,Marqeta,"Senior Product Manager, Stablecoins","Remote, USA",Low Priority,non_eu,42
+169,Mercury,Senior Analyst - Compensation & People Analytics,"San Francisco, CA, New York, NY, Portland, OR, or Remote within United States",Ignore,non_eu,17
+170,Mercury,Senior HRIS Analyst,"San Francisco, CA, New York, NY, Portland, OR, or Remote within Canada or United States",Ignore,non_eu,34
+171,Mercury,Senior IT Analyst,"San Francisco, CA, New York, NY, Portland, OR, or Remote within Canada or United States",Ignore,non_eu,16
+172,Mercury,Senior Product Manager - API & Agentic Banking,"San Francisco, CA, New York, NY, Portland, OR, or Remote within Canada or United States",Low Priority,non_eu,44
+174,Nubank,Senior Business Analyst,"Colombia, Bogota",Low Priority,unknown_reject,48
+175,Qonto,Anti-Financial Crime Analyst - German Speaker 🇩🇪,Belgrade,Ignore,unknown_reject,14
+195,Shift Technology,"Product Manager, Insurance Data & Compliance",US - Remote,Medium Priority,non_eu,62
+199,Thoughtworks,Senior Quality Analyst,"Bangkok, Thailand",Ignore,unknown_reject,26
+200,Valtech,Business Analyst - Data & AI,Bengaluru,Low Priority,non_eu,38
+202,Valtech,L2 Support-Associate Developer,Bengaluru,Ignore,non_eu,19
+203,Valtech,Senior Analyst,Dallas,Ignore,unknown_reject,14
+206,Valtech,Senior Talent Development Analyst,Brazil - Remote,Ignore,non_eu,17
+207,Valtech,Xstore Business Analyst,Bengaluru,Low Priority,non_eu,42
+208,Anthropic,"Safeguards Enforcement Analyst, Safety Evaluations","Remote-Friendly (Travel-Required) | San Francisco, CA | Washington, DC; San Francisco, CA | New York City, NY",Low Priority,non_eu,45
+209,Anthropic,"Safeguards Policy Analyst, Fraud & Scams","Remote-Friendly (Travel-Required) | San Francisco, CA | New York City, NY",Low Priority,non_eu,37
+215,Scale AI,"Product Manager of AI Applications, Global Public Sector","Riyadh, Saudi Arabia",Low Priority,unknown_reject,48
+220,Dataiku,Sr Product Manager,"Europe, Middle East, and Africa; France, Paris; France, Remote; Germany, Berlin - Munzstrasse 12; Germany, Remote; Netherlands, Amsterdam; Netherlands, Remote; Spain, Remote; United Kingdom, London; United Kingdom, Remote",Medium Priority,non_eu,63
+221,6sense,Staff Product Manager,"United States, Remote",Low Priority,non_eu,47
+222,ZoomInfo,Senior Product Manager - Identity,"Bethesda, Maryland, United States; Remote; Vancouver, Washington, United States; Waltham, Massachusetts, United States",Low Priority,non_eu,47
+252,Gympass,AI & Data Intern,Brazil (Remote),Ignore,non_eu,26
+253,Gympass,Data Analyst Specialist | CX Insights,Brazil (Remote),Ignore,non_eu,26
+254,Gympass,Martech Operations Analyst - Braze,Brazil (Remote),Ignore,non_eu,21
+255,Gympass,Mid-Level Data Analyst | Partnerships,Brazil (Remote),Ignore,non_eu,25
+256,Gympass,Retention Marketing Analyst,US (NY - Hybrid),Ignore,non_eu,25
+258,Gympass,Staff Product Manager | B2B - GenAI,Brazil (Remote),Low Priority,non_eu,42
+259,HelloFresh,Business Intelligence Analyst,"Manila, Manila, Philippines",Ignore,unknown_reject,28
+260,HelloFresh,Community Associate (Project Based - WFH),"Manila, Manila, Philippines",Ignore,unknown_reject,23
+262,HelloFresh,Data Analyst,"Manila, Manila, Philippines",Ignore,unknown_reject,32
+264,HelloFresh,[HelloConnect] Product Data Analyst (SQL/Python),"Manila, Manila, Philippines",Ignore,unknown_reject,33
+265,HelloFresh,[HELLOCONNECT] Talent Acquisition Shared Services Associate - CA,"Manila, Manila, Philippines",Ignore,unknown_reject,27
+266,HelloFresh,HR Data Management Associate - International,"Manila, Manila, Philippines",Ignore,unknown_reject,31
+268,HelloFresh,International People Shared Services Associate,"Manila, Manila, Philippines",Ignore,unknown_reject,28
+275,HelloFresh,Junior IT Financial Operations Analyst,"Manila, Manila, Philippines",Ignore,unknown_reject,29
+278,HelloFresh,People Shared Services Associate (Administrator),"Manila, Manila, Philippines",Ignore,unknown_reject,26
+290,HelloFresh,US People Shared Services Associate,"Manila, Manila, Philippines",Ignore,unknown_reject,29
+361,Yext,Associate Data Scientist,"Washington, D.C.",Ignore,unknown_reject,23
+363,Yext,Senior Product Manager,"Washington, D.C.",Medium Priority,unknown_reject,50
+364,Duolingo,"Senior Product Manager, DET","Pittsburgh, PA",Low Priority,unknown_reject,43
+365,Duolingo,"Senior Product Manager, Learning","Pittsburgh, PA",Low Priority,unknown_reject,43
+366,Duolingo,"Senior Product Manager, Score","Pittsburgh, PA",Medium Priority,unknown_reject,55
+379,Moloco,Machine Learning Engineer Intern (3-month internship),"Seoul, Korea",Ignore,unknown_reject,24
+385,Databricks,"Analyst, Talent Acquisition Operations","Belgrade, Serbia",Ignore,unknown_reject,31
+392,Fivetran,Billing AR Analyst,"Remote, India, APAC",Ignore,non_eu,24
+393,Fivetran,Senior Billing AR Analyst,"Remote, India, APAC",Ignore,non_eu,25
+394,Fivetran,"Senior Product Manager, Monetization Platform","Novi Sad, South Bačka, Serbia, EMEA",Low Priority,unknown_reject,48
+395,Mixpanel,Senior Strategic Finance Associate,"San Francisco, US (Remote)",Ignore,non_eu,34
+413,GitLab,"Principal HRIS Analyst, People Technology - Workday","Remote, US",Low Priority,non_eu,38
+414,GitLab,"Principal Product Manager, AI Custom Models","Remote, Canada; Remote, US",Medium Priority,non_eu,55
+415,GitLab,"Principal Product Manager, Security - GTM","Remote, Canada; Remote, US",Medium Priority,non_eu,52
+416,GitLab,"Senior Business Process Analyst, People Operations","Remote, Canada; Remote, US",Ignore,non_eu,30
+417,GitLab,"Senior FP&A Analyst, Corporate Finance","Remote, Canada; Remote, US",Ignore,non_eu,33
+418,GitLab,Senior Indirect Tax Compliance Analyst,"Remote, India",Ignore,non_eu,28
+420,GitLab,"Staff HRIS Analyst, People Technology - Workday","Remote, US",Low Priority,non_eu,37
+421,GitLab,"Staff Product Manager, AI Agent Orchestration","Remote, US",Medium Priority,non_eu,68
+423,Airtable,"Senior Analyst, People Technology",Remote - US,Ignore,non_eu,28
+426,Asana,"Junior Software Engineer, Reykjavik",Reykjavík,Ignore,unknown_reject,26
+428,Typeform,Lead Product Manager - Growth,Germany (Remote) ; Ireland (Remote); Netherlands (Remote) ; Portugal (Remote) ; Spain (Remote) ; United Kingdom (Remote) ; United States (Remote),Medium Priority,non_eu,54
+430,Typeform,Senior Product Manager - Analytics,Germany (Remote) ; Ireland (Remote); Netherlands (Remote) ; Portugal (Remote) ; Spain (Remote) ; United Kingdom (Remote) ; United States (Remote),Low Priority,non_eu,48
+433,Qualtrics,Skillbridge - Enterprise Support Manager Internship,United States (Remote),Ignore,non_eu,34
+434,Pendo,Account Executive Commercial Sales (SMB/Growth),"Raleigh, NC",Ignore,unknown_reject,26
+436,Twilio,Business Systems Analyst 2,Remote - India,Ignore,non_eu,23
+437,Twilio,"Marketing Analyst, PLG & Self-Serve Analytics",Remote - US,Ignore,non_eu,28
+438,Twilio,Principal Product Manager,Remote - US,Medium Priority,non_eu,50
+439,Twilio,Product Manager L3,Remote - Canada,Medium Priority,non_eu,50
+440,Twilio,Security Compliance & Regulatory Affairs Analyst,Remote - Canada,Ignore,non_eu,26
+441,Twilio,"Senior Business System Analyst, Salesforce",Remote - Canada,Ignore,non_eu,26
+442,Twilio,Senior Zendesk Business Systems Analyst,Remote - Canada,Ignore,non_eu,22
+443,Twilio,"Staff, Product Manager",Remote - Canada,Medium Priority,non_eu,52
+444,Twilio,Staff Product Manager - Core Commerce Platform,Remote - Canada,Medium Priority,non_eu,52
+445,Twilio,Staff Product Manager - Enterprise AI,Remote - US,Medium Priority,non_eu,67
+449,Braze,Senior Sales Data Analyst,São Paulo,Ignore,non_eu,33
+451,Klaviyo,Compliance Operations Analyst,"Denver, CO",Ignore,unknown_reject,25
+452,Klaviyo,"Lead Data Science Analyst, GTM Strategic Analytics and Insights","Denver, CO",Ignore,unknown_reject,28
+453,Klaviyo,"Lead GTM Data Operations Analyst, AI Workflows","Denver, CO",Ignore,unknown_reject,32
+455,Iterable,Junior Deal Desk Analyst,REMOTE - US,Ignore,non_eu,29
+457,Iterable,"Senior Product Manager, User Data Platform","Atlanta, Georgia; Austin, Texas; Boston, Massachusetts; Hybrid - Denver; Hybrid - New York; Hybrid - San Francisco; REMOTE - US",Medium Priority,non_eu,60
+458,Workato,Customer Success Operations Associate,"Alabang, Philippines",Ignore,unknown_reject,30
+459,Workato,Deal Desk Analyst,"Alabang, Philippines",Ignore,unknown_reject,29
+460,Workato,Partner Operations Associate,"Alabang, Philippines; Makati, Philippines",Ignore,unknown_reject,30
+461,Workato,Sales Operations Analyst,"Alabang, Philippines",Ignore,unknown_reject,26
+462,Workato,Senior GRC Analyst,"Palo Alto, California",Ignore,unknown_reject,27
+463,Workato,Staff Product Manager (Build Experience - Agentic),"Palo Alto, California",Medium Priority,unknown_reject,50
+464,Workato,Staff Product Manager (Build Experience - Platform),"Palo Alto, California",Medium Priority,unknown_reject,56
+465,Workato,Staff Product Manager (Enterprise & AI Governance),"Palo Alto, California",Medium Priority,unknown_reject,54
+466,Workato,Staff Product Manager (Evals),"Palo Alto, California",Medium Priority,unknown_reject,52
+467,Cribl,Customer Experience Ops Intern,"Remote - San Francisco, California",Ignore,non_eu,30
+468,Cribl,"Sr Product Manager, Opportunity-to-Order",Remote - United States,Medium Priority,non_eu,61
+469,Cribl,"Sr Product Manager, Pipeline Generation Systems",Remote - United States,Medium Priority,non_eu,62
+470,Cribl,Systems Analyst Lead,Remote - United States,Ignore,non_eu,30
+471,Pagerduty,Senior Product Manager,Remote (USA),Medium Priority,non_eu,60
+472,Pagerduty,Senior Sales Strategy and Operations Analyst,Remote (USA),Ignore,non_eu,30
+473,JFrog,"Associate Account Manager, Revenue Retention",Atlanta,Ignore,non_eu,23
+474,JFrog,Associate Technical Product Marketing Manager – AI & Security,Sunnyvale,Ignore,unknown_reject,34
+475,JFrog,Developer Support Engineer,Bengaluru,Ignore,non_eu,18
+476,JFrog,Developer Support Engineer (EMEA Region - EU Shift),Bengaluru,Ignore,non_eu,20
+477,JFrog,Principal Product Manager,"Tel Aviv/ Netanya, Israel",Medium Priority,unknown_reject,52
+478,JFrog,"Senior Commission Analyst, FP&A",Sunnyvale,Ignore,unknown_reject,29
+479,JFrog,Senior Product Manager,"Tel Aviv/ Netanya, Israel",Low Priority,unknown_reject,46
+480,JFrog,"Senior Product Manager, AI-Native Security","Tel Aviv/ Netanya, Israel",Low Priority,unknown_reject,45
+481,JFrog,Senior Product Manager – Growth,"Tel Aviv/ Netanya, Israel",Medium Priority,unknown_reject,60
+482,JFrog,Senior Product Manager - JFrog Security,"Tel Aviv/ Netanya, Israel",Low Priority,unknown_reject,47
+483,JFrog,Senior Technical Product Manager (Platform Infra),Bengaluru,Medium Priority,non_eu,55
+484,JFrog,Technical Success Manager (EMEA Region),Bengaluru,Ignore,non_eu,24
+485,JFrog,Technical Success Manager (North America Region - EST Shift),Bengaluru,Ignore,non_eu,23
+486,Dropbox,"Senior Analyst, Strategic Corporate & Revenue FP&A",Remote - Canada: Select locations,Ignore,non_eu,28
+487,Dropbox,"Senior Group Product Manager, Dropbox Sign",Remote - Canada: Select locations,Low Priority,non_eu,40
+488,Dropbox,Senior Workday Analyst,Remote - US: Select locations,Ignore,non_eu,31
+489,Dropbox,Staff Product Manager,Remote - Canada: Select locations,Low Priority,non_eu,44
+492,Sisense,Product Manager - Data and Analytics,Ukraine,Low Priority,unknown_reject,45
+493,Sisense,Sales Enablement Analyst,New York (Remote),Ignore,non_eu,29
+494,Sisense,Technical Product Manager,Ukraine,Medium Priority,unknown_reject,58
+495,The Trade Desk,Ad Policy Operations Analyst,Denver,Ignore,unknown_reject,29
+496,The Trade Desk,"Analyst, FP&A",Ventura,Ignore,unknown_reject,34
+498,The Trade Desk,Business Intelligence Analyst II,Ventura,Ignore,unknown_reject,32
+499,The Trade Desk,Commissions Analyst,Irvine,Ignore,unknown_reject,29
+500,The Trade Desk,"Principal Product Manager, Core Platform Ventura TV OS",San Jose,Low Priority,unknown_reject,46
+502,The Trade Desk,Staff Business Intelligence Analyst,Irvine,Ignore,unknown_reject,32
+503,Flatiron Health,"Associate, Content Marketing (Contractor)",NY Office,Ignore,unknown_reject,23
+504,Flatiron Health,"Associate Research Scientist, Knowledge Management",Durham office,Ignore,unknown_reject,17
+505,Flatiron Health,"Associate Research Scientist, Statistical Programming",Durham office,Ignore,unknown_reject,14
+508,Flatiron Health,Product Manager - Document Intelligence Platform,NY office,Low Priority,unknown_reject,48
+509,Flatiron Health,Senior Compensation Analyst,NY office,Ignore,unknown_reject,28
+512,Veriff,Associate Solutions Engineer,USA (Remote),Ignore,non_eu,30
+514,Veriff,"Staff Applied Research Engineer, Biometrics","Spain (Remote), USA (Remote)",Ignore,non_eu,20
+526,Form3,Product Owner - US Payments,100% Remote (US/Canada*),Low Priority,non_eu,39
+529,Mintel,Associate Product Operations Specialist,Kuala Lumpur,Ignore,unknown_reject,20
+532,LaunchDarkly,"Security Analyst - Governance, Risk, and Compliance",Remote - US,Ignore,non_eu,11
+544,Adyen,Associate KYC Analyst,Bengaluru,Ignore,non_eu,25
+551,Thoughtworks,Staffing Partner: Senior Associate,"Ho Chi Minh City, Vietnam",Ignore,non_eu,32
+553,Gympass,CX Global Quality Analyst,Brazil (Remote),Ignore,non_eu,22
+562,Databricks,Solutions Architect (Lakebase),"Seoul, South Korea",Ignore,unknown_reject,30
+563,Cribl,Sr Revenue Operations Analyst,Remote - United States,Ignore,non_eu,32
+564,The Trade Desk,Data Support Analyst I,Ventura,Ignore,unknown_reject,34
+568,Degreed,Financial Analyst | US,"Utah, US | Hybrid",Ignore,non_eu,31

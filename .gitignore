@@ -1,0 +1,25 @@
+# Secrets — never commit
+.env
+
+# Generated outputs — personal documents, not code
+outputs/
+
+# Database — local state, not code
+data/career_agent.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs — runtime output, not source
+data/logs/
+*.log

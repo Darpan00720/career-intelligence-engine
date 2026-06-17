@@ -1,0 +1,5 @@
+# STUB — TO BE WRITTEN IN PHASE 4
+# This file will contain the full instructions Claude uses to write a tailored resume.
+# It will define ATS formatting rules, keyword incorporation, company research usage,
+# and the output format that document_builder.py can parse into a Word file.
+# Do not run the Resume Agent until this stub is replaced with real content.

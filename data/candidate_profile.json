@@ -1,0 +1,182 @@
+{
+  "personal": {
+    "name": "Darpan",
+    "last_name": "Jain",
+    "email": "darpan20071992@gmail.com",
+    "phone": "+39 3444098737",
+    "linkedin_url": "https://www.linkedin.com/in/darpan-jain-/",
+    "location": "Milan, Italy",
+    "nationality": "Indian",
+    "languages": [
+      { "language": "English", "level": "Fluent" },
+      { "language": "Italian", "level": "Elementary (A2)" },
+      { "language": "Hindi",   "level": "Native" }
+    ]
+  },
+
+  "education": [
+    {
+      "institution": "POLIMI Graduate School of Management (POLIMI GSoM)",
+      "degree": "MBA",
+      "field": "AI & Digital Transformation",
+      "location": "Milan, Italy",
+      "start_date": "September 2025",
+      "end_date": "September 2026",
+      "key_coursework": [
+        "AI Strategy",
+        "AI and Digital Transformation",
+        "Business Strategy"
+      ],
+      "thesis_or_project": "AI-Powered Career Intelligence Agent — designing and developing an AI-driven system that automates job discovery, role matching, company research, resume tailoring, cover letter generation, and application tracking using LLMs, workflow orchestration, and structured scoring models."
+    }
+  ],
+
+  "experience": [
+    {
+      "title": "Strategy & Analytics",
+      "company": "Skillventory Consultancy",
+      "location": "Mumbai, India",
+      "start_date": "July 2019",
+      "end_date": "September 2025",
+      "employment_type": "Full-time",
+      "responsibilities": [
+        "Conducted user and market research to identify customer pain points, emerging AI trends, and opportunities for product improvement.",
+        "Created Product Requirement Documents (PRDs), user stories, and acceptance criteria for AI-powered product features.",
+        "Performed competitor analysis and benchmarking to identify feature gaps, market opportunities, and product differentiation strategies."
+      ]
+    }
+  ],
+
+  "skills": {
+    "hr_core": [
+      "Talent Acquisition",
+      "Workforce Planning",
+      "HRBP",
+      "Organizational Transformation",
+      "People Analytics"
+    ],
+    "analytics_tools": [
+      "Excel (Advanced)",
+      "SQL",
+      "Python",
+      "Tableau",
+      "Data Analysis",
+      "KPI Analysis",
+      "Business Analytics"
+    ],
+    "ai_and_digital": [
+      "AI Strategy",
+      "Digital Transformation",
+      "Prompt Engineering",
+      "AI Agent Development",
+      "Claude",
+      "ChatGPT",
+      "Gemini",
+      "GitHub Copilot",
+      "Large Language Models (LLMs)",
+      "AI Workflow Automation"
+    ],
+    "strategy_and_business": [
+      "Business Strategy",
+      "Product Thinking",
+      "Market Research",
+      "Competitive Benchmarking",
+      "Hypothesis-Driven Research",
+      "Strategic Planning",
+      "Stakeholder Analysis",
+      "Product Discovery",
+      "User Research",
+      "Prioritization"
+    ],
+    "soft_skills": [
+      "Stakeholder Management",
+      "Cross-functional Collaboration",
+      "Structured Communication",
+      "Presentation Skills",
+      "Problem Solving",
+      "First-Principles Thinking",
+      "Analytical Reasoning",
+      "Decision Making",
+      "Leadership",
+      "Project Coordination"
+    ],
+    "certifications": [
+      "Business Analytics Certification – IIM Indore (2023)"
+    ]
+  },
+
+  "target_roles": {
+    "track_1_product_and_strategy": [
+      "AI Product Manager Intern",
+      "Product Manager Intern",
+      "Business Strategy Intern",
+      "AI Strategy Intern"
+    ],
+    "track_2_strategic_hr": [
+      "Talent Acquisition",
+      "HR Analytics",
+      "People Analytics",
+      "Workforce Planning"
+    ],
+    "seniority_preference": ["Intern", "Junior", "Associate"],
+    "contract_types": ["Full-time", "Internship", "Fixed-term"],
+    "search_keyword_variants": [
+      "Stagiaire Product Manager",
+      "Analyste RH",
+      "Stage AI Strategy",
+      "Analista HR",
+      "HR Analytics Praktikant",
+      "AI & Digital Strategy Intern",
+      "People Analytics Intern",
+      "HR Data Analyst"
+    ]
+  },
+
+  "target_geography": {
+    "based_in": "Milan, Italy",
+    "preferred_locations": [
+      "Milan",
+      "London",
+      "Amsterdam",
+      "Berlin",
+      "Paris",
+      "Barcelona",
+      "Dublin",
+      "Zurich"
+    ],
+    "open_to_all_europe": true,
+    "remote_ok": true,
+    "hybrid_ok": true,
+    "relocation_ok": true,
+    "exclude_locations": []
+  },
+
+  "application_preferences": {
+    "min_score_threshold": 70,
+    "max_applications_per_week": 15,
+    "preferred_company_sizes": ["Startup", "Scale-up", "Large Enterprise"],
+    "preferred_industries": [
+      "Technology",
+      "AI / Machine Learning",
+      "HR Tech",
+      "Consulting",
+      "Financial Services",
+      "Healthcare Tech"
+    ],
+    "exclude_companies": [],
+    "exclude_industries": [],
+    "exclude_title_keywords": [
+      "hr generalist", "hr operations", "hr admin", "hr administrator",
+      "payroll", "recruitment coordinator", "hr coordinator", "hr assistant",
+      "hr support", "compensation specialist", "benefits specialist"
+    ]
+  },
+
+  "value_proposition": "HR leader with 6+ years building talent and people analytics functions, now applying AI & Digital Transformation expertise (POLIMI GSoM MBA) to bridge the gap between human capital strategy and product thinking. Uniquely positioned for roles at the intersection of AI, workforce intelligence, and organizational strategy.",
+
+  "metadata": {
+    "profile_version": "1.1",
+    "last_updated": "2026-06-09",
+    "instructions": "Fill in every field marked FILL_IN before running any agent. The more specific your achievements (with numbers), the better every resume and cover letter will be. Remove any field marked FILL_IN_OR_REMOVE if it does not apply to you."
+  }
+}

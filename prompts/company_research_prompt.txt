@@ -1,0 +1,5 @@
+# STUB — TO BE WRITTEN IN PHASE 3
+# This file will contain the full instructions Claude uses to research a company.
+# It will define what to look for (mission, recent news, culture, key people, talking points),
+# how to self-assess research quality (0–10 scale), and the required output format.
+# Do not run the Company Research Agent until this stub is replaced with real content.

@@ -1,0 +1,5 @@
+# STUB — TO BE WRITTEN IN PHASE 4
+# This file will contain the full instructions Claude uses to write a personalized cover letter.
+# It will define tone, length, opening hook strategy, experience-to-role connection,
+# and the output format that document_builder.py can parse into a Word file.
+# Do not run the Cover Letter Agent until this stub is replaced with real content.

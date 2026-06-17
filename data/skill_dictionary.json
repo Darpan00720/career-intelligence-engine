@@ -1,0 +1,248 @@
+{
+  "version": "1.1",
+  "last_updated": "2026-06-09",
+  "description": "Structured skills taxonomy used by the Scoring Agent to normalize job description keywords into standardized categories before Claude analysis. Improves scoring consistency, explainability, and enables future analytics across applications.",
+  "usage": "The Scoring Agent extracts skills from a job description, maps them to categories in this file, computes a candidate overlap score per category, then sends the structured result to Claude for final scoring. This prevents score variation caused by different phrasings of the same skill.",
+
+  "categories": {
+
+    "product_management": {
+      "label": "Product Management",
+      "description": "Skills related to defining, building, and managing products across their lifecycle",
+      "keywords": [
+        "product manager", "product management", "product roadmap", "product strategy",
+        "product vision", "product thinking", "product owner", "product development",
+        "agile", "scrum", "kanban", "sprint planning", "sprint review", "sprint retrospective",
+        "backlog management", "backlog grooming", "user stories", "acceptance criteria",
+        "PRD", "product requirements document", "product specification",
+        "go-to-market", "GTM strategy", "product launch", "market launch",
+        "A/B testing", "experimentation", "feature flagging",
+        "product metrics", "product analytics", "north star metric", "OKR", "KPI",
+        "user research", "customer discovery", "customer interviews", "usability testing",
+        "MVP", "minimum viable product", "product-market fit",
+        "market sizing", "TAM SAM SOM",
+        "stakeholder alignment",
+        "feature prioritization", "RICE scoring", "MoSCoW", "effort-impact matrix",
+        "product-led growth", "PLG", "product operations", "product ops"
+      ]
+    },
+
+    "ai_strategy": {
+      "label": "AI Strategy",
+      "description": "Skills related to AI adoption, governance, implementation strategy, and AI-powered product development",
+      "keywords": [
+        "AI strategy", "artificial intelligence strategy", "AI roadmap", "AI vision",
+        "AI transformation", "AI adoption", "AI implementation", "AI integration",
+        "AI governance", "AI ethics", "responsible AI", "trustworthy AI",
+        "AI risk management", "AI risk assessment", "AI compliance",
+        "machine learning", "ML", "deep learning", "neural networks",
+        "large language models", "LLM", "generative AI", "GenAI", "foundation models",
+        "prompt engineering", "prompt design", "retrieval augmented generation", "RAG",
+        "AI use case identification", "AI use cases", "AI value assessment",
+        "AI product strategy", "AI-powered products", "AI-powered solutions",
+        "automation strategy", "intelligent automation", "cognitive automation",
+        "digital twins", "AI infrastructure", "MLOps", "AI platform",
+        "AI-augmented", "AI-enhanced", "AI-driven", "AI-first",
+        "model evaluation", "model monitoring", "AI performance",
+        "human-AI collaboration", "augmented intelligence"
+      ]
+    },
+
+    "business_strategy": {
+      "label": "Business Strategy",
+      "description": "Skills related to strategic planning, business development, and corporate strategy",
+      "keywords": [
+        "business strategy", "corporate strategy", "strategic planning", "strategy development",
+        "strategic analysis", "strategic initiatives", "strategic priorities",
+        "business development", "BD", "market analysis", "market research",
+        "competitive strategy", "competitive analysis", "competitive intelligence",
+        "SWOT analysis", "PESTLE analysis", "Porter's Five Forces",
+        "BCG matrix", "Ansoff matrix", "strategic frameworks",
+        "business case", "business case development", "investment case",
+        "P&L management", "profit and loss", "financial modeling",
+        "operating model", "operating model design", "target operating model",
+        "scenario planning", "scenario analysis", "strategic scenarios",
+        "growth strategy", "market entry", "market expansion",
+        "value creation", "value proposition", "value chain",
+        "business model", "business model innovation", "business transformation",
+        "M&A", "mergers and acquisitions", "due diligence",
+        "strategic partnerships", "partnership strategy", "alliances",
+        "strategy consulting", "management consulting", "strategy execution"
+      ]
+    },
+
+    "digital_transformation": {
+      "label": "Digital Transformation",
+      "description": "Skills related to leading organizational and technology transformation",
+      "keywords": [
+        "digital transformation", "digital strategy", "digital vision",
+        "change management", "organizational change", "change leadership",
+        "digital adoption", "technology adoption", "digital maturity",
+        "process automation", "process improvement", "process reengineering", "BPR",
+        "ERP", "ERP implementation", "SAP", "Oracle", "Microsoft Dynamics",
+        "cloud migration", "cloud transformation", "cloud strategy",
+        "technology roadmap", "IT strategy", "enterprise architecture",
+        "digital operating model", "operating model transformation",
+        "agile transformation", "agile at scale", "agile ways of working",
+        "innovation management", "innovation culture", "intrapreneurship",
+        "digital culture", "culture change", "mindset change",
+        "system integration", "enterprise integration", "API strategy",
+        "technology implementation", "technology deployment",
+        "digital upskilling", "capability building", "digital skills",
+        "new ways of working", "hybrid work",
+        "operational efficiency", "operational excellence", "lean", "six sigma"
+      ]
+    },
+
+    "people_analytics": {
+      "label": "People Analytics",
+      "description": "Advanced HR data science, predictive modeling, and workforce intelligence",
+      "keywords": [
+        "people analytics", "workforce analytics", "HR analytics",
+        "predictive analytics", "predictive HR", "prescriptive analytics",
+        "attrition modeling", "attrition prediction", "turnover prediction", "flight risk",
+        "workforce forecasting", "demand forecasting", "supply modeling",
+        "talent analytics", "talent intelligence", "talent insights",
+        "diversity analytics", "DEI analytics", "inclusion analytics",
+        "compensation analytics", "pay equity analysis", "pay gap analysis",
+        "performance analytics", "performance prediction", "high performer modeling",
+        "engagement analytics", "sentiment analysis", "pulse survey analytics",
+        "HR data science", "people science", "organizational behavior analytics",
+        "organizational network analysis", "ONA", "collaboration analytics",
+        "HRIS analytics", "HR data infrastructure", "HR data platform",
+        "skills analytics", "skills intelligence", "skills ontology",
+        "workforce segmentation", "cohort analysis", "survival analysis",
+        "people data", "HR data", "workforce data", "talent data",
+        "data-driven HR", "evidence-based HR", "HR insights"
+      ]
+    },
+
+    "hr_analytics": {
+      "label": "HR Analytics & Reporting",
+      "description": "HR metrics, operational reporting, dashboards, and KPI tracking",
+      "keywords": [
+        "HR reporting", "HR metrics", "HR KPIs", "HR scorecard",
+        "HR dashboard", "executive HR dashboard", "people dashboard",
+        "headcount reporting", "headcount analysis", "HC reporting",
+        "turnover analysis", "turnover rate", "attrition rate", "voluntary attrition",
+        "time-to-hire", "time-to-fill", "time-to-offer", "hiring velocity",
+        "cost-per-hire", "cost of vacancy", "recruiting cost",
+        "offer acceptance rate", "offer decline rate", "candidate experience metrics",
+        "diversity metrics", "representation metrics", "gender pay gap",
+        "engagement scores", "eNPS", "employee satisfaction",
+        "HR data visualization", "people data visualization",
+        "workforce metrics", "talent metrics", "HR benchmarking",
+        "FTE reporting", "FTE analysis", "headcount budget",
+        "absenteeism", "sick leave analysis", "absence management",
+        "HR operational reporting", "management information", "MI",
+        "HR business intelligence", "HR BI", "people reporting"
+      ]
+    },
+
+    "talent_acquisition": {
+      "label": "Talent Acquisition",
+      "description": "Recruiting, sourcing, hiring, and employer branding skills",
+      "keywords": [
+        "talent acquisition", "TA", "recruiting", "recruitment",
+        "full-cycle recruiting", "full-cycle recruitment", "end-to-end recruiting",
+        "sourcing", "talent sourcing", "proactive sourcing", "Boolean search",
+        "LinkedIn Recruiter", "LinkedIn sourcing", "social recruiting",
+        "employer branding", "employer brand", "EVP", "employee value proposition",
+        "candidate experience", "candidate journey", "candidate engagement",
+        "interview design", "structured interviews", "competency-based interviews",
+        "behavioral interviews", "assessment design", "assessment center",
+        "offer management", "offer negotiation", "offer extension",
+        "ATS", "applicant tracking system", "Greenhouse", "Lever", "Workable",
+        "campus recruiting", "university recruiting", "graduate recruiting",
+        "executive search", "executive recruiting", "leadership hiring",
+        "diversity recruiting", "inclusive hiring", "diverse talent",
+        "technical recruiting", "engineering recruiting", "tech hiring",
+        "volume recruiting", "high-volume hiring", "RPO",
+        "talent pipeline", "talent pooling", "talent community",
+        "job description writing", "JD", "job posting",
+        "hiring manager partnership", "hiring manager training",
+        "hiring strategy", "workforce hiring plan",
+        "onboarding", "pre-boarding", "new hire experience",
+        "referral program", "employee referrals"
+      ]
+    },
+
+    "workforce_planning": {
+      "label": "Workforce Planning",
+      "description": "Strategic headcount planning, skills gap analysis, and organizational design",
+      "keywords": [
+        "workforce planning", "strategic workforce planning", "SWP",
+        "headcount planning", "headcount forecast", "HC planning",
+        "skills gap analysis", "skills assessment", "capability gap",
+        "capacity planning", "resource planning", "FTE planning",
+        "organizational design", "org design", "org structure",
+        "role design", "job architecture", "job leveling", "job grading",
+        "FTE modeling", "workforce modeling", "workforce scenarios",
+        "talent supply", "talent demand", "supply-demand analysis",
+        "scenario modeling", "workforce simulation",
+        "workforce strategy", "talent strategy", "people strategy",
+        "skills-based organization", "skills taxonomy", "skills framework",
+        "future of work", "workforce of the future", "workforce evolution",
+        "workforce optimization", "workforce efficiency",
+        "talent deployment", "talent mobility", "internal mobility",
+        "workforce intelligence", "workforce insights",
+        "labor market analysis", "labor market data",
+        "succession planning", "talent pools", "pipeline planning",
+        "restructuring", "reorg", "reorganization", "span of control"
+      ]
+    },
+
+    "leadership": {
+      "label": "Leadership & Management",
+      "description": "People management, organizational leadership, and influence skills",
+      "keywords": [
+        "team management", "people management", "team leadership",
+        "leadership", "senior leadership", "executive leadership",
+        "cross-functional collaboration", "cross-functional teams", "matrix organization",
+        "stakeholder management", "senior stakeholder management",
+        "executive communication", "executive presentation", "C-suite engagement",
+        "board presentation", "board reporting",
+        "mentoring", "coaching", "talent development", "people development",
+        "performance management", "performance conversations", "feedback culture",
+        "transformation leadership",
+        "decision making", "strategic decision making",
+        "influence", "influence without authority", "persuasion",
+        "vision setting", "vision communication", "purpose-driven leadership",
+        "team building", "team development", "high-performing teams",
+        "project management", "program management", "portfolio management",
+        "budget management", "resource management",
+        "conflict resolution", "difficult conversations",
+        "communication", "written communication", "presentation skills",
+        "thought leadership", "public speaking", "executive presence"
+      ]
+    },
+
+    "technical_skills": {
+      "label": "Technical & Tool Skills",
+      "description": "Software, programming languages, data tools, and HR technology platforms",
+      "keywords": [
+        "SQL", "MySQL", "PostgreSQL", "database querying",
+        "Python", "R", "data science programming",
+        "Excel", "advanced Excel", "pivot tables", "VLOOKUP", "VBA", "macros",
+        "Power BI", "Tableau", "Looker", "Qlik", "data visualization tools",
+        "SPSS", "SAS", "statistical software",
+        "SAP SuccessFactors", "Workday", "Oracle HCM", "Oracle Fusion",
+        "BambooHR", "HiBob", "Personio", "HR technology",
+        "iCIMS", "SmartRecruiters", "Taleo",
+        "Salesforce", "CRM", "HubSpot",
+        "Microsoft Office", "Microsoft 365", "Google Workspace",
+        "Slack", "Microsoft Teams", "collaboration tools",
+        "JSON", "API", "REST API", "data integration",
+        "data modeling", "data warehouse", "ETL",
+        "statistical analysis", "regression analysis", "hypothesis testing",
+        "machine learning basics", "predictive modeling",
+        "automation", "RPA", "robotic process automation",
+        "data storytelling", "business intelligence", "BI",
+        "dashboards", "reporting tools", "analytics platforms",
+        "survey tools", "Qualtrics", "Culture Amp", "Glint",
+        "project management tools", "Jira", "Asana", "Monday.com", "Confluence"
+      ]
+    }
+
+  }
+}
