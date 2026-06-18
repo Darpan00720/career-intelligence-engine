@@ -1,0 +1,96 @@
+# Career Intelligence Engine v5.1 — distributed local stack.
+# Brings up the full backing services so the platform can run against
+# PostgreSQL + Redis + Redpanda (Kafka API) + Prometheus/Grafana/Jaeger.
+#
+#   docker compose -f deploy/docker-compose.distributed.yml up -d
+#
+# Set DB_DIALECT=postgres, DATABASE_URL, REDIS_URL, KAFKA_BROKERS, and
+# OTEL_EXPORTER_OTLP_ENDPOINT in the api/worker service envs to activate the
+# distributed adapters.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: career
+      POSTGRES_PASSWORD: career
+      POSTGRES_DB: career
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U career"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redpanda:                      # Kafka-API compatible broker (single node)
+    image: redpandadata/redpanda:latest
+    command:
+      - redpanda start
+      - --overprovisioned
+      - --smp 1
+      - --memory 512M
+      - --kafka-addr PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:9092
+    ports: ["9092:9092"]
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes: ["./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports: ["16686:16686", "4317:4317"]
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      ENVIRONMENT: production
+      DB_DIALECT: postgres
+      DATABASE_URL: postgresql://career:career@postgres:5432/career
+      REDIS_URL: redis://redis:6379/0
+      KAFKA_BROKERS: redpanda:9092
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      TENANCY_MODE: multi
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: ["python", "-m", "workers.run"]   # distributed worker entrypoint
+    environment:
+      DB_DIALECT: postgres
+      DATABASE_URL: postgresql://career:career@postgres:5432/career
+      REDIS_URL: redis://redis:6379/0
+      KAFKA_BROKERS: redpanda:9092
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    deploy:
+      replicas: 2
+
+volumes:
+  pgdata:

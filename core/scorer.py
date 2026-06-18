@@ -496,6 +496,28 @@ def assign_priority_bucket(total_score: int) -> str:
     return next(label for threshold, label in PRIORITY_THRESHOLDS if total_score >= threshold)
 
 
+# ── Application priority bands (export / view layer) ────────────────────────────
+# An action-oriented band answering "how soon should I apply?", used by the
+# jobs_master dashboard and the Top Jobs view. This is deliberately separate
+# from the strategic `priority_bucket` above: it is computed at export time from
+# the final score only and is NEVER written to the scores table, so the existing
+# bucket taxonomy (and everything depending on it) is unaffected.
+
+APPLICATION_PRIORITY_THRESHOLDS: list[tuple[int, str]] = [
+    (90, "Apply Now"),
+    (80, "This Week"),
+    (70, "Good Match"),
+    (0,  "Low Priority"),
+]
+
+
+def application_priority(total_score: int | None) -> str:
+    """Map a 0–100 score to an action band for the jobs_master dashboard."""
+    score = total_score or 0
+    return next(label for threshold, label in APPLICATION_PRIORITY_THRESHOLDS
+                if score >= threshold)
+
+
 def clear_caches() -> None:
     global _company_tier_cache, _watchlist_cache
     _company_tier_cache = None

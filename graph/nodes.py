@@ -59,7 +59,23 @@ def supervisor_node(state: CareerState) -> dict:
     errs = state.get("errors") or []
     if errs:
         logger.info("supervisor: %d error(s) recorded so far", len(errs))
-    return {"audit_log": ["supervisor"]}
+    update: dict = {"audit_log": ["supervisor"]}
+
+    # v6 Phase 3: when an execution plan is present, mark any plan task whose
+    # node has already executed (recorded in audit_log) as completed. Only the
+    # newly-finished tasks are emitted — the `completed_tasks` reducer (extend)
+    # accumulates them, so this stays idempotent and duplicate-free. Without a
+    # plan this block is skipped and behaviour is exactly the legacy path.
+    from graph.routing import as_plan  # local import: avoid import cycle at load
+    plan = as_plan(state.get("execution_plan"))
+    if plan is not None:
+        completed = set(state.get("completed_tasks") or [])
+        ran = set(state.get("audit_log") or [])
+        newly = [t.id for t in plan.tasks if t.agent in ran and t.id not in completed]
+        if newly:
+            update["completed_tasks"] = newly
+            update["current_task"] = newly[-1]
+    return update
 
 
 # --- 1. Profile & Career Strategy ----------------------------------------- #

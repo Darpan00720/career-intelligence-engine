@@ -1,0 +1,49 @@
+# Career Intelligence Engine v5.1 — Helm values.
+image:
+  repository: career-intelligence-engine
+  tag: "5.1.0"
+  pullPolicy: IfNotPresent
+
+api:
+  replicas: 3
+  resources:
+    requests: {cpu: "250m", memory: "512Mi"}
+    limits: {cpu: "1", memory: "1Gi"}
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+  podDisruptionBudget:
+    minAvailable: 2
+
+worker:
+  replicas: 4
+  resources:
+    requests: {cpu: "250m", memory: "512Mi"}
+    limits: {cpu: "1", memory: "1Gi"}
+  autoscaling:
+    enabled: true
+    minReplicas: 4
+    maxReplicas: 50
+    targetCPUUtilizationPercentage: 75
+
+env:
+  ENVIRONMENT: production
+  TENANCY_MODE: multi
+  DB_DIALECT: postgres
+  LOG_LEVEL: INFO
+
+# Secrets are supplied via a SealedSecret / external-secrets operator in prod;
+# never commit real values. Keys: JWT_SECRET, SECRETS_KEY, DATABASE_URL,
+# REDIS_URL, ANTHROPIC_API_KEY, OPENAI_API_KEY.
+secretName: career-engine-secrets
+
+postgresql:
+  enabled: true
+  architecture: replication      # primary + read replicas
+  readReplicas: {replicaCount: 2}
+redis:
+  enabled: true
+  architecture: replication
+  sentinel: {enabled: true}      # Redis Sentinel for HA failover

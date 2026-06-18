@@ -1,12 +1,19 @@
-"""Supervisor routing: phase-based next-node selection (no LLM).
+"""Supervisor routing.
 
-Phase-based (not output-presence-based) progression makes routing robust to
-empty results: a node that legitimately produces an empty list still advances
-the phase, so the graph never loops. Each worker sets `phase` to its own phase
-on completion; the supervisor maps the last-completed phase to the next node.
+Two modes, selected automatically by what's in state:
 
-Full Sprint-3 path:
-  profile -> ingestion -> taxonomy -> scoring -> intelligence -> prioritization -> END
+* **Dependency-based (v6 Phase 3)** — when an ``execution_plan`` is present, the
+  router dispatches every task whose dependencies are already satisfied
+  (``completed_tasks``). Returning a *list* fans those tasks out in one parallel
+  superstep; the supervisor re-evaluates after they return. END is reached once
+  every task is complete (or no task can make progress — a deadlock guard).
+
+* **Phase-based (legacy)** — when there is no plan, the original behaviour is
+  preserved exactly: map the last-completed `phase` to the next node. This keeps
+  every pre-v6 graph run (and its tests) byte-for-byte unchanged.
+
+The supervisor node (graph/nodes.supervisor_node) is responsible for *marking*
+tasks completed; this module only reads state and decides routing.
 """
 from __future__ import annotations
 
@@ -14,8 +21,9 @@ from langgraph.graph import END
 
 from graph.state import CareerState
 from schemas.control import Phase
+from schemas.execution import ExecutionPlan
 
-# last-completed phase  ->  next node to run
+# last-completed phase  ->  next node to run  (legacy phase-based routing)
 _NEXT_NODE: dict = {
     None: "profile_strategy",
     Phase.INIT: "profile_strategy",
@@ -32,6 +40,41 @@ _NEXT_NODE: dict = {
 }
 
 
-def route_from_supervisor(state: CareerState) -> str:
-    """Return the next node (or END) based on the last completed phase."""
-    return _NEXT_NODE.get(state.get("phase"), END)
+def as_plan(plan) -> ExecutionPlan | None:
+    """Coerce a state ``execution_plan`` value to an ExecutionPlan.
+
+    Accepts a live model (in-process), a dict (rehydrated from a checkpoint), or
+    None. Used by both the router and the supervisor's completion marking.
+    """
+    if plan is None or isinstance(plan, ExecutionPlan):
+        return plan
+    if isinstance(plan, dict):
+        return ExecutionPlan.model_validate(plan)
+    return plan  # assume duck-typed ExecutionPlan-like
+
+
+def ready_agents(state: CareerState) -> list[str]:
+    """Node names of tasks whose dependencies are all satisfied and not yet done."""
+    plan = as_plan(state.get("execution_plan"))
+    if plan is None:
+        return []
+    completed = set(state.get("completed_tasks") or [])
+    return [t.agent for t in plan.ready_tasks(completed)]
+
+
+def route_from_supervisor(state: CareerState):
+    """Return the next node, a list of parallel nodes, or END.
+
+    Dependency-based when a plan is present; otherwise legacy phase-based.
+    """
+    plan = as_plan(state.get("execution_plan"))
+    if plan is None:
+        return _NEXT_NODE.get(state.get("phase"), END)
+
+    completed = set(state.get("completed_tasks") or [])
+    if plan.is_complete(completed):
+        return END
+    ready = [t.agent for t in plan.ready_tasks(completed)]
+    # Empty ready set with the plan not complete => unsatisfiable (e.g. a failed
+    # dependency). End cleanly rather than spin.
+    return ready or END

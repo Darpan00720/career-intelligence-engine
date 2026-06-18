@@ -57,6 +57,15 @@ def create_app() -> FastAPI:
         return response
 
     app.include_router(router)
+
+    # v4 CRM REST API (jobs, recommendations, analytics, applications, pipeline).
+    # This /api/* surface is the v1 API and stays stable for backward compat.
+    from api.crm_routes import router as crm_router
+    app.include_router(crm_router)
+
+    # v5 API Gateway v2 — workflows, reviews, experiments, metrics, tenants, usage.
+    from api.v2_routes import router as v2_router
+    app.include_router(v2_router)
     return app
 
 

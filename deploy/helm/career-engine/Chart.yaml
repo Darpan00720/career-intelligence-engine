@@ -1,0 +1,15 @@
+apiVersion: v2
+name: career-engine
+description: Career Intelligence Engine v5.1 — cloud-native multi-tenant AI platform
+type: application
+version: 5.1.0
+appVersion: "5.1.0"
+dependencies:
+  - name: postgresql
+    version: "^15.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: "^19.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

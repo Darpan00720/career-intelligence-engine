@@ -14,6 +14,7 @@ from pydantic import ConfigDict, model_validator
 from graph.reducers import extend, merge_by_job_id, merge_dict
 from schemas.base import CareerBaseModel
 from schemas.control import AgentError, Phase, RunStatus
+from schemas.execution import ExecutionPlan
 from schemas.intelligence import OpportunityIntelligence
 from schemas.jobs import ClassifiedJob, IngestedJob, IngestionStats, TaxonomyStats
 from schemas.planning import ApplyItem, CompositeScore
@@ -32,6 +33,16 @@ class CareerState(TypedDict, total=False):
     phase: Phase
     status: RunStatus
     next_node: str
+
+    # --- v6 planning plane (Phase 1: data only; phase-based routing still active) ---
+    # Populated by the future Planner Agent. When `execution_plan` is absent the
+    # graph behaves exactly as before (legacy phase routing). `completed_tasks`
+    # accumulates (reducer); `pending_tasks`/`current_task` overwrite.
+    user_query: str
+    execution_plan: ExecutionPlan
+    pending_tasks: list[str]
+    completed_tasks: Annotated[list[str], extend]
+    current_task: str
 
     # --- profile phase ---
     profile_path: str
@@ -90,6 +101,13 @@ class CareerStateModel(CareerBaseModel):
     phase: Optional[Phase] = None
     status: Optional[RunStatus] = None
     next_node: Optional[str] = None
+
+    # v6 planning plane (Phase 1: validated shape only)
+    user_query: Optional[str] = None
+    execution_plan: Optional[ExecutionPlan] = None
+    pending_tasks: Optional[list[str]] = None
+    completed_tasks: Optional[list[str]] = None
+    current_task: Optional[str] = None
 
     profile_path: Optional[str] = None
     profile: Optional[CareerProfile] = None
@@ -165,6 +183,10 @@ def new_career_state(run_id: str, profile_path: str) -> CareerState:
         errors=[],
         retry_count={},
         audit_log=[],
+        # v6 planning plane: empty until a Planner Agent populates a plan.
+        # Their presence is inert under legacy phase-based routing.
+        pending_tasks=[],
+        completed_tasks=[],
     )
 
 

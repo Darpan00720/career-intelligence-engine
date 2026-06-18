@@ -47,7 +47,8 @@ _WORKERS = {
 _DEFERRED: dict = {}
 
 
-def build_graph(checkpointer=None, interrupt_before: list[str] | None = None):
+def build_graph(checkpointer=None, interrupt_before: list[str] | None = None,
+                planner_mode: bool = False):
     """Compile and return the runnable graph.
 
     Args:
@@ -55,6 +56,12 @@ def build_graph(checkpointer=None, interrupt_before: list[str] | None = None):
             SqliteSaver from get_checkpointer().
         interrupt_before: optional list of node names to pause before
             (human-in-the-loop scaffolding). Resume with invoke(None, config).
+        planner_mode: when True, insert a planner stage (START -> planner ->
+            supervisor) that builds an ExecutionPlan from ``user_query``; the
+            supervisor then routes by task dependencies. When False (default)
+            the graph is identical to before: START -> supervisor with
+            phase-based routing. Routing auto-selects its mode by whether an
+            ``execution_plan`` is present in state, so either entry point works.
     """
     g = StateGraph(CareerState)
 
@@ -62,7 +69,13 @@ def build_graph(checkpointer=None, interrupt_before: list[str] | None = None):
     for name, fn in {**_WORKERS, **_DEFERRED}.items():
         g.add_node(name, fn)
 
-    g.add_edge(START, "supervisor")
+    if planner_mode:
+        from graph.planner import planner_node
+        g.add_node("planner", planner_node)
+        g.add_edge(START, "planner")
+        g.add_edge("planner", "supervisor")
+    else:
+        g.add_edge(START, "supervisor")
 
     # Conditional fan-out from the supervisor. All worker nodes (active +
     # deferred) are declared targets so none are orphaned; END terminates.

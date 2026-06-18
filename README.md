@@ -195,4 +195,5 @@ MBA Candidate | AI Product Management | Digital Transformation | Technology Stra
 
 📄 License
 
-This project is released for educational, research, and portfolio purposes.
+This project is released for educational, research, and portfolio purpose
+

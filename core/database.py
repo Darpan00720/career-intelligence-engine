@@ -149,6 +149,359 @@ def initialize() -> None:
 
             CREATE UNIQUE INDEX IF NOT EXISTS idx_jd_embeddings_job_profile
                 ON jd_embeddings(job_id, profile_version);
+
+            CREATE TABLE IF NOT EXISTS pipeline_runs (
+                id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id                 TEXT    UNIQUE,
+                started_at             DATETIME,
+                completed_at           DATETIME,
+                jobs_found             INTEGER DEFAULT 0,
+                jobs_scored            INTEGER DEFAULT 0,
+                companies_researched   INTEGER DEFAULT 0,
+                documents_generated    INTEGER DEFAULT 0,
+                applications_updated   INTEGER DEFAULT 0,
+                status                 TEXT,
+                duration_seconds       REAL,
+                detail                 TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS review_queue (
+                id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+                job_id               INTEGER NOT NULL REFERENCES jobs(id),
+                state                TEXT    DEFAULT 'Pending Review',
+                recommendation       TEXT,
+                resume_doc_id        INTEGER,
+                cover_letter_doc_id  INTEGER,
+                notes                TEXT,
+                created_at           DATETIME DEFAULT (DATETIME('now')),
+                updated_at           DATETIME DEFAULT (DATETIME('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS experiments (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                experiment_id TEXT    UNIQUE,
+                name          TEXT,
+                status        TEXT    DEFAULT 'running',
+                variants      TEXT,
+                winner        TEXT,
+                created_at    DATETIME DEFAULT (DATETIME('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS experiment_events (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                experiment_id TEXT    NOT NULL,
+                variant       TEXT    NOT NULL,
+                metric        TEXT    NOT NULL,
+                value         REAL    NOT NULL,
+                created_at    DATETIME DEFAULT (DATETIME('now'))
+            );
+
+            -- ── v5: multi-tenancy ────────────────────────────────────────────
+            CREATE TABLE IF NOT EXISTS tenants (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id  TEXT    UNIQUE NOT NULL,
+                name       TEXT,
+                mode       TEXT    DEFAULT 'single',
+                config     TEXT,
+                created_at DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS platform_users (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id      TEXT    UNIQUE NOT NULL,
+                tenant_id    TEXT    NOT NULL DEFAULT 'default',
+                email        TEXT,
+                role         TEXT    DEFAULT 'USER',
+                api_key_hash TEXT,
+                created_at   DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS workspaces (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                workspace_id TEXT    UNIQUE NOT NULL,
+                tenant_id    TEXT    NOT NULL DEFAULT 'default',
+                name         TEXT,
+                created_at   DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS audit_log (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id  TEXT    DEFAULT 'default',
+                actor      TEXT,
+                action     TEXT,
+                entity     TEXT,
+                detail     TEXT,
+                created_at DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS usage_records (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id  TEXT    DEFAULT 'default',
+                metric     TEXT    NOT NULL,
+                amount     REAL    NOT NULL DEFAULT 1,
+                created_at DATETIME DEFAULT (DATETIME('now'))
+            );
+
+            -- ── v5: event bus ────────────────────────────────────────────────
+            CREATE TABLE IF NOT EXISTS events_log (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id        TEXT    UNIQUE NOT NULL,
+                type            TEXT    NOT NULL,
+                version         INTEGER DEFAULT 1,
+                tenant_id       TEXT    DEFAULT 'default',
+                idempotency_key TEXT,
+                payload         TEXT,
+                status          TEXT    DEFAULT 'published',
+                error           TEXT,
+                created_at      DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_events_idem
+                ON events_log(type, idempotency_key) WHERE idempotency_key IS NOT NULL;
+            CREATE TABLE IF NOT EXISTS dead_letter_queue (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id   TEXT,
+                type       TEXT,
+                tenant_id  TEXT    DEFAULT 'default',
+                payload    TEXT,
+                error      TEXT,
+                created_at DATETIME DEFAULT (DATETIME('now'))
+            );
+
+            -- ── v5: persistent workflow engine ───────────────────────────────
+            CREATE TABLE IF NOT EXISTS workflow_runs (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id      TEXT    UNIQUE NOT NULL,
+                tenant_id   TEXT    DEFAULT 'default',
+                definition  TEXT    NOT NULL,
+                status      TEXT    DEFAULT 'PENDING',
+                detail      TEXT,
+                created_at  DATETIME DEFAULT (DATETIME('now')),
+                updated_at  DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS workflow_steps (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id      TEXT    NOT NULL,
+                name        TEXT    NOT NULL,
+                status      TEXT    DEFAULT 'PENDING',
+                attempts    INTEGER DEFAULT 0,
+                output      TEXT,
+                error       TEXT,
+                updated_at  DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS workflow_events (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id     TEXT    NOT NULL,
+                event      TEXT    NOT NULL,
+                detail     TEXT,
+                created_at DATETIME DEFAULT (DATETIME('now'))
+            );
+
+            -- ── v5: LLM cost tracking ────────────────────────────────────────
+            CREATE TABLE IF NOT EXISTS llm_costs (
+                id                INTEGER PRIMARY KEY AUTOINCREMENT,
+                request_id        TEXT,
+                tenant_id         TEXT    DEFAULT 'default',
+                workflow_id       TEXT,
+                agent             TEXT,
+                provider          TEXT,
+                model             TEXT,
+                prompt_tokens     INTEGER DEFAULT 0,
+                completion_tokens INTEGER DEFAULT 0,
+                cost_usd          REAL    DEFAULT 0,
+                latency_ms        REAL    DEFAULT 0,
+                cached            INTEGER DEFAULT 0,
+                created_at        DATETIME DEFAULT (DATETIME('now'))
+            );
+
+            -- ── v5.1: ML platform (feature store + model registry) ────────────
+            CREATE TABLE IF NOT EXISTS ml_feature_sets (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                name       TEXT    NOT NULL,
+                version    INTEGER NOT NULL,
+                features   TEXT,
+                data       TEXT,
+                created_at DATETIME DEFAULT (DATETIME('now')),
+                UNIQUE(name, version)
+            );
+            CREATE TABLE IF NOT EXISTS ml_models (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                name       TEXT    NOT NULL,
+                version    INTEGER NOT NULL,
+                stage      TEXT    DEFAULT 'staging',
+                metadata   TEXT,
+                lineage    TEXT,
+                artifact   TEXT,
+                created_at DATETIME DEFAULT (DATETIME('now')),
+                UNIQUE(name, version)
+            );
+
+            -- ── v5.4: AI agent platform (conversations, memory, agent state) ──
+            CREATE TABLE IF NOT EXISTS conversations (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                conversation_id TEXT    UNIQUE NOT NULL,
+                tenant_id       TEXT    DEFAULT 'default',
+                user_id         TEXT,
+                title           TEXT,
+                summary         TEXT,
+                created_at      DATETIME DEFAULT (DATETIME('now')),
+                updated_at      DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS conversation_messages (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                conversation_id TEXT    NOT NULL,
+                tenant_id       TEXT    DEFAULT 'default',
+                role            TEXT    NOT NULL,
+                content         TEXT,
+                agent           TEXT,
+                tokens          INTEGER DEFAULT 0,
+                created_at      DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS agent_memories (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id   TEXT    DEFAULT 'default',
+                scope       TEXT,
+                content     TEXT,
+                embedding   TEXT,
+                created_at  DATETIME DEFAULT (DATETIME('now')),
+                expires_at  DATETIME
+            );
+            CREATE TABLE IF NOT EXISTS agent_runs (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id     TEXT    UNIQUE NOT NULL,
+                tenant_id  TEXT    DEFAULT 'default',
+                status     TEXT    DEFAULT 'PENDING',
+                state      TEXT,
+                updated_at DATETIME DEFAULT (DATETIME('now'))
+            );
+
+            -- ── v5.5: Career Intelligence Engine ────────────────────────────
+            CREATE TABLE IF NOT EXISTS career_profiles (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id    TEXT    UNIQUE NOT NULL,
+                tenant_id     TEXT    DEFAULT 'default',
+                user_id       TEXT,
+                full_name     TEXT,
+                data          TEXT,           -- normalized resume JSON
+                confidence    REAL    DEFAULT 0.0,
+                created_at    DATETIME DEFAULT (DATETIME('now')),
+                updated_at    DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS skills (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id     TEXT    DEFAULT 'default',
+                name          TEXT    NOT NULL,
+                slug          TEXT    NOT NULL,
+                category      TEXT,           -- hard | soft | transferable
+                version       INTEGER DEFAULT 1,
+                created_at    DATETIME DEFAULT (DATETIME('now')),
+                UNIQUE(tenant_id, slug, version)
+            );
+            CREATE TABLE IF NOT EXISTS skill_relationships (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id     TEXT    DEFAULT 'default',
+                source        TEXT    NOT NULL,
+                target        TEXT    NOT NULL,
+                relation      TEXT    NOT NULL,   -- prerequisite | related | similar
+                weight        REAL    DEFAULT 1.0,
+                version       INTEGER DEFAULT 1,
+                created_at    DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS role_definitions (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id     TEXT    DEFAULT 'default',
+                slug          TEXT    NOT NULL,
+                title         TEXT    NOT NULL,
+                industry      TEXT,
+                required_skills TEXT,            -- JSON list
+                seniority     TEXT,
+                version       INTEGER DEFAULT 1,
+                created_at    DATETIME DEFAULT (DATETIME('now')),
+                UNIQUE(tenant_id, slug, version)
+            );
+            CREATE TABLE IF NOT EXISTS career_paths (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id     TEXT    DEFAULT 'default',
+                from_role     TEXT    NOT NULL,
+                to_role       TEXT    NOT NULL,
+                difficulty    REAL    DEFAULT 0.0,
+                typical_months INTEGER DEFAULT 0,
+                created_at    DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS recommendations (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                recommendation_id TEXT UNIQUE NOT NULL,
+                tenant_id     TEXT    DEFAULT 'default',
+                profile_id    TEXT,
+                rec_type      TEXT,           -- job | career_path | learning
+                target        TEXT,
+                score         REAL    DEFAULT 0.0,
+                confidence    REAL    DEFAULT 0.0,
+                explanation   TEXT,
+                created_at    DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS recommendation_feedback (
+                id                INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id         TEXT    DEFAULT 'default',
+                recommendation_id TEXT,
+                profile_id        TEXT,
+                signal            TEXT,       -- accepted | rejected | viewed | applied
+                weight            REAL    DEFAULT 1.0,
+                created_at        DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS market_snapshots (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id     TEXT    DEFAULT 'default',
+                role_slug     TEXT,
+                geography     TEXT,
+                demand_count  INTEGER DEFAULT 0,
+                data          TEXT,           -- JSON aggregates
+                captured_at   DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS salary_benchmarks (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id     TEXT    DEFAULT 'default',
+                role_slug     TEXT,
+                geography     TEXT,
+                currency      TEXT    DEFAULT 'EUR',
+                p25           REAL,
+                p50           REAL,
+                p75           REAL,
+                sample_size   INTEGER DEFAULT 0,
+                captured_at   DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS learning_paths (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                path_id       TEXT    UNIQUE NOT NULL,
+                tenant_id     TEXT    DEFAULT 'default',
+                profile_id    TEXT,
+                target_role   TEXT,
+                steps         TEXT,           -- ordered JSON list
+                total_steps   INTEGER DEFAULT 0,
+                completed_steps INTEGER DEFAULT 0,
+                created_at    DATETIME DEFAULT (DATETIME('now'))
+            );
+            CREATE TABLE IF NOT EXISTS feature_flags (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                tenant_id     TEXT    DEFAULT 'default',
+                flag          TEXT    NOT NULL,
+                enabled       BOOLEAN DEFAULT 0,
+                rollout       REAL    DEFAULT 0.0,
+                updated_at    DATETIME DEFAULT (DATETIME('now')),
+                UNIQUE(tenant_id, flag)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_skills_tenant_cat
+                ON skills(tenant_id, category);
+            CREATE INDEX IF NOT EXISTS idx_skillrel_tenant_src
+                ON skill_relationships(tenant_id, source);
+            CREATE INDEX IF NOT EXISTS idx_roles_tenant
+                ON role_definitions(tenant_id, slug);
+            CREATE INDEX IF NOT EXISTS idx_recs_tenant_profile
+                ON recommendations(tenant_id, profile_id);
+            CREATE INDEX IF NOT EXISTS idx_recfb_tenant_rec
+                ON recommendation_feedback(tenant_id, recommendation_id);
+            CREATE INDEX IF NOT EXISTS idx_market_role_geo
+                ON market_snapshots(tenant_id, role_slug, geography);
+            CREATE INDEX IF NOT EXISTS idx_salary_role_geo
+                ON salary_benchmarks(tenant_id, role_slug, geography);
+            CREATE INDEX IF NOT EXISTS idx_learnpaths_profile
+                ON learning_paths(tenant_id, profile_id);
         """)
 
     with get_connection() as conn:
@@ -160,7 +513,7 @@ def _ensure_directories() -> None:
     """Create log and output directories if they don't exist."""
     Path(config.LOGS_DIR).mkdir(parents=True, exist_ok=True)
     outputs = Path(config.OUTPUTS_DIR)
-    for sub in ("resumes", "cover_letters", "exports"):
+    for sub in ("resumes", "cover_letters", "exports", "documents", "archive"):
         (outputs / sub).mkdir(parents=True, exist_ok=True)
 
 
@@ -168,6 +521,13 @@ def _column_exists(conn: sqlite3.Connection, table: str, column: str) -> bool:
     """Return True if column already exists in table (PRAGMA-based check)."""
     rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
     return any(row["name"] == column for row in rows)
+
+
+def _table_exists(conn: sqlite3.Connection, table: str) -> bool:
+    """Return True if a table exists (sqlite_master lookup)."""
+    return conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+    ).fetchone() is not None
 
 
 def _safe_add_column(
@@ -224,6 +584,18 @@ def _migrate(conn: sqlite3.Connection) -> None:
             ("eligibility_review_required", "BOOLEAN DEFAULT 0"),
         ]:
             _safe_add_column(conn, "jobs", _col, _def)
+
+        # v3: document versioning fingerprints — reuse documents instead of
+        # regenerating when the job text, prompt, and research are unchanged.
+        # Guarded: the documents table is created in initialize() before
+        # _migrate runs; the guard keeps _migrate safe on partial test fixtures.
+        if _table_exists(conn, "documents"):
+            for _col, _def in [
+                ("source_hash",   "TEXT"),
+                ("prompt_hash",   "TEXT"),
+                ("research_hash", "TEXT"),
+            ]:
+                _safe_add_column(conn, "documents", _col, _def)
 
         # Phase 2: add scoring dimension columns to scores
         for _col, _def in [
@@ -570,6 +942,29 @@ def get_scored_jobs_for_export() -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def get_all_scored_jobs_ranked() -> list[dict]:
+    """
+    Return every scored job ordered by total_score DESC, then date-found DESC —
+    the canonical dataset for ranking, the jobs_master dashboard, and the Top
+    Jobs view. Joins the latest application status (NULL when no application row
+    exists yet). Ranks themselves are computed in core.ranking, not stored.
+    """
+    with get_connection() as conn:
+        rows = conn.execute("""
+            SELECT j.*,
+                   s.total_score,
+                   s.priority_bucket,
+                   s.explanation,
+                   a.status AS application_status,
+                   a.notes  AS application_notes
+            FROM jobs j
+            JOIN scores s ON s.job_id = j.id
+            LEFT JOIN applications a ON a.job_id = j.id
+            ORDER BY s.total_score DESC, j.fetched_date DESC, j.id DESC
+        """).fetchall()
+    return [dict(r) for r in rows]
+
+
 # ── Company Research ──────────────────────────────────────────────────────────
 
 def insert_research(job_id: int, company: str, mission: str, recent_news: str,
@@ -590,6 +985,15 @@ def insert_research(job_id: int, company: str, mission: str, recent_news: str,
         return cursor.lastrowid
 
 
+def get_researched_job_ids() -> set:
+    """Return the set of job_ids that have at least one company_research row."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT DISTINCT job_id FROM company_research"
+        ).fetchall()
+    return {r["job_id"] for r in rows}
+
+
 def get_research_for_job(job_id: int) -> dict | None:
     with get_connection() as conn:
         row = conn.execute(
@@ -604,17 +1008,33 @@ def get_research_for_job(job_id: int) -> dict | None:
 
 def insert_document(job_id: int, doc_type: str, file_path: str, file_name: str,
                     word_count: int, version: int, langgraph_run_id: str,
-                    prompt_version: str) -> int:
+                    prompt_version: str,
+                    source_hash: str = None, prompt_hash: str = None,
+                    research_hash: str = None) -> int:
     with get_connection() as conn:
         cursor = conn.execute(
             """INSERT INTO documents
                (job_id, type, file_path, file_name, word_count, version,
-                langgraph_run_id, prompt_version)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                langgraph_run_id, prompt_version,
+                source_hash, prompt_hash, research_hash)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (job_id, doc_type, file_path, file_name, word_count, version,
-             langgraph_run_id, prompt_version)
+             langgraph_run_id, prompt_version,
+             source_hash, prompt_hash, research_hash)
         )
         return cursor.lastrowid
+
+
+def get_latest_document(job_id: int, doc_type: str) -> dict | None:
+    """Return the highest-version document row for a job + type, or None."""
+    with get_connection() as conn:
+        row = conn.execute(
+            """SELECT * FROM documents
+               WHERE job_id = ? AND type = ?
+               ORDER BY version DESC, id DESC LIMIT 1""",
+            (job_id, doc_type),
+        ).fetchone()
+        return dict(row) if row else None
 
 
 # ── Applications ──────────────────────────────────────────────────────────────
@@ -656,6 +1076,50 @@ def update_application(job_id: int, status: str = None, notes: str = None,
             (status, notes, next_action, next_action_date,
              contact_name, outcome, job_id)
         )
+
+
+def get_application(job_id: int) -> dict | None:
+    """Return the application row for a job, or None if none exists yet."""
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT * FROM applications WHERE job_id = ?", (job_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def ensure_application_row(job_id: int, status: str = "Not Started") -> bool:
+    """Create an application row for a job if one does not already exist.
+
+    Never overwrites an existing status (idempotent — safe to call every run).
+    Returns True if a new row was created, False if one already existed.
+    """
+    with get_connection() as conn:
+        existing = conn.execute(
+            "SELECT id FROM applications WHERE job_id = ?", (job_id,)
+        ).fetchone()
+        if existing:
+            return False
+        conn.execute(
+            "INSERT INTO applications (job_id, status) VALUES (?, ?)",
+            (job_id, status),
+        )
+        return True
+
+
+def get_applications_overview() -> list[dict]:
+    """Return all applications joined with job + score context for the tracker view,
+    ordered by score DESC. Includes jobs that have an application row."""
+    with get_connection() as conn:
+        rows = conn.execute("""
+            SELECT a.job_id, a.status, a.notes, a.last_updated,
+                   j.title, j.company, j.location, j.url,
+                   s.total_score
+            FROM applications a
+            JOIN jobs j ON j.id = a.job_id
+            LEFT JOIN scores s ON s.job_id = a.job_id
+            ORDER BY COALESCE(s.total_score, 0) DESC, a.last_updated DESC
+        """).fetchall()
+    return [dict(r) for r in rows]
 
 
 # ── Company Eligibility Profiles ─────────────────────────────────────────────
@@ -853,3 +1317,232 @@ def log_search(query: str, job_board: str, jobs_found: int,
              json.dumps(filters_used) if filters_used else None)
         )
         return cursor.lastrowid
+
+
+# ── Pipeline Runs (v3) ────────────────────────────────────────────────────────
+
+def insert_pipeline_run(run: dict) -> int:
+    """Persist a PipelineRun record (idempotent on run_id via upsert)."""
+    with get_connection() as conn:
+        cursor = conn.execute(
+            """INSERT INTO pipeline_runs
+               (run_id, started_at, completed_at, jobs_found, jobs_scored,
+                companies_researched, documents_generated, applications_updated,
+                status, duration_seconds, detail)
+               VALUES (:run_id, :started_at, :completed_at, :jobs_found, :jobs_scored,
+                       :companies_researched, :documents_generated, :applications_updated,
+                       :status, :duration_seconds, :detail)
+               ON CONFLICT(run_id) DO UPDATE SET
+                   completed_at         = excluded.completed_at,
+                   jobs_found           = excluded.jobs_found,
+                   jobs_scored          = excluded.jobs_scored,
+                   companies_researched = excluded.companies_researched,
+                   documents_generated  = excluded.documents_generated,
+                   applications_updated = excluded.applications_updated,
+                   status               = excluded.status,
+                   duration_seconds     = excluded.duration_seconds,
+                   detail               = excluded.detail""",
+            run,
+        )
+        return cursor.lastrowid
+
+
+def get_pipeline_runs(limit: int = 20) -> list[dict]:
+    """Return the most recent pipeline runs, newest first."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM pipeline_runs ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+# ── Aggregate counts (v3 analytics) ───────────────────────────────────────────
+
+def get_aggregate_counts() -> dict:
+    """Return headline counts for the analytics engine in a single pass."""
+    with get_connection() as conn:
+        jobs_found  = conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
+        jobs_scored = conn.execute("SELECT COUNT(*) FROM scores").fetchone()[0]
+        researched  = conn.execute(
+            "SELECT COUNT(DISTINCT job_id) FROM company_research"
+        ).fetchone()[0]
+        documents   = conn.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
+    return {
+        "jobs_found":   jobs_found,
+        "jobs_scored":  jobs_scored,
+        "researched":   researched,
+        "documents":    documents,
+    }
+
+
+def get_status_counts() -> dict[str, int]:
+    """Return {application_status: count} across the applications table."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT status, COUNT(*) AS n FROM applications GROUP BY status"
+        ).fetchall()
+    return {r["status"]: r["n"] for r in rows}
+
+
+def ensure_application_rows_bulk(job_ids: list[int], status: str = "Not Started") -> int:
+    """Batch-create application rows for job_ids lacking one. Returns count created.
+
+    Single connection + executemany — avoids per-row connection churn (v4 perf).
+    """
+    if not job_ids:
+        return 0
+    with get_connection() as conn:
+        existing = {
+            r["job_id"] for r in conn.execute(
+                "SELECT job_id FROM applications WHERE job_id IN "
+                f"({','.join('?' * len(job_ids))})", job_ids
+            ).fetchall()
+        }
+        missing = [(jid, status) for jid in job_ids if jid not in existing]
+        if missing:
+            conn.executemany(
+                "INSERT INTO applications (job_id, status) VALUES (?, ?)", missing
+            )
+        return len(missing)
+
+
+# ── Review Queue (v4) ─────────────────────────────────────────────────────────
+
+def enqueue_review(job_id: int, recommendation: str = None,
+                   resume_doc_id: int = None, cover_letter_doc_id: int = None) -> int:
+    with get_connection() as conn:
+        cursor = conn.execute(
+            """INSERT INTO review_queue
+               (job_id, recommendation, resume_doc_id, cover_letter_doc_id)
+               VALUES (?, ?, ?, ?)""",
+            (job_id, recommendation, resume_doc_id, cover_letter_doc_id),
+        )
+        return cursor.lastrowid
+
+
+def update_review_state(review_id: int, state: str, notes: str = None) -> None:
+    with get_connection() as conn:
+        conn.execute(
+            """UPDATE review_queue
+               SET state = ?, notes = COALESCE(?, notes), updated_at = DATETIME('now')
+               WHERE id = ?""",
+            (state, notes, review_id),
+        )
+
+
+def get_review(review_id: int) -> dict | None:
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT * FROM review_queue WHERE id = ?", (review_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def list_reviews(state: str = None) -> list[dict]:
+    with get_connection() as conn:
+        if state:
+            rows = conn.execute(
+                """SELECT r.*, j.title, j.company
+                   FROM review_queue r JOIN jobs j ON j.id = r.job_id
+                   WHERE r.state = ? ORDER BY r.id DESC""", (state,)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """SELECT r.*, j.title, j.company
+                   FROM review_queue r JOIN jobs j ON j.id = r.job_id
+                   ORDER BY r.id DESC"""
+            ).fetchall()
+    return [dict(r) for r in rows]
+
+
+# ── Experiments (v4) ──────────────────────────────────────────────────────────
+
+def upsert_experiment(experiment_id: str, name: str, variants: list[str],
+                      status: str = "running") -> None:
+    with get_connection() as conn:
+        conn.execute(
+            """INSERT INTO experiments (experiment_id, name, variants, status)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(experiment_id) DO UPDATE SET
+                   name = excluded.name, variants = excluded.variants,
+                   status = excluded.status""",
+            (experiment_id, name, json.dumps(variants), status),
+        )
+
+
+def set_experiment_winner(experiment_id: str, winner: str) -> None:
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE experiments SET winner = ?, status = 'complete' WHERE experiment_id = ?",
+            (winner, experiment_id),
+        )
+
+
+def get_experiment(experiment_id: str) -> dict | None:
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT * FROM experiments WHERE experiment_id = ?", (experiment_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def record_experiment_event(experiment_id: str, variant: str,
+                            metric: str, value: float) -> int:
+    with get_connection() as conn:
+        cursor = conn.execute(
+            """INSERT INTO experiment_events (experiment_id, variant, metric, value)
+               VALUES (?, ?, ?, ?)""",
+            (experiment_id, variant, metric, value),
+        )
+        return cursor.lastrowid
+
+
+def get_experiment_events(experiment_id: str) -> list[dict]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM experiment_events WHERE experiment_id = ?", (experiment_id,)
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+# ── Feedback / outcomes (v4) ──────────────────────────────────────────────────
+
+def get_outcomes_joined() -> list[dict]:
+    """Return every application joined with job + score context, for the
+    feedback engine: company, role_category, score, status, outcome."""
+    with get_connection() as conn:
+        rows = conn.execute("""
+            SELECT a.job_id, a.status, a.outcome,
+                   j.company, j.role_category, j.location, j.visa_gate, j.work_mode,
+                   s.total_score
+            FROM applications a
+            JOIN jobs j ON j.id = a.job_id
+            LEFT JOIN scores s ON s.job_id = a.job_id
+        """).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_jobs_per_day(limit_days: int = 30) -> list[dict]:
+    """Return [{day, count}] of jobs discovered per fetched_date (recent first)."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            """SELECT fetched_date AS day, COUNT(*) AS count
+               FROM jobs WHERE fetched_date IS NOT NULL
+               GROUP BY fetched_date ORDER BY fetched_date DESC LIMIT ?""",
+            (limit_days,),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_average_score() -> float:
+    with get_connection() as conn:
+        val = conn.execute("SELECT AVG(total_score) FROM scores").fetchone()[0]
+    return round(val, 1) if val is not None else 0.0
+
+
+def get_document_counts() -> dict:
+    """Return {total, reused_versions} where reused_versions counts version>1 rows."""
+    with get_connection() as conn:
+        total = conn.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
+        revs = conn.execute("SELECT COUNT(*) FROM documents WHERE version > 1").fetchone()[0]
+    return {"total": total, "reused_versions": revs}
