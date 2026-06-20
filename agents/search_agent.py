@@ -385,6 +385,84 @@ def fetch_lever(company: str, ats_id: str) -> list[dict]:
         return []
 
 
+# ── More ATS connectors (free official public APIs, no Apify needed) ───────────
+
+def _norm_ashby(raw: dict, company: str, fetched: date) -> dict:
+    loc = raw.get("location")
+    if isinstance(loc, dict):
+        loc = loc.get("name") or ""
+    return {
+        "title":       (raw.get("title") or "").strip(),
+        "company":     company,
+        "location":    str(loc or "").strip(),
+        "job_board":   "ashby",
+        "url":         (raw.get("jobUrl") or raw.get("applyUrl") or "").strip(),
+        "description": _strip_html(raw.get("descriptionHtml") or raw.get("description") or ""),
+        "posted_date": str(raw.get("publishedDate") or raw.get("publishedAt") or fetched)[:10],
+        "raw_data":    json.dumps(raw, ensure_ascii=False),
+    }
+
+
+def fetch_ashby(company: str, ats_id: str) -> list[dict]:
+    url = f"https://api.ashbyhq.com/posting-api/job-board/{ats_id}?includeCompensation=false"
+    try:
+        resp = requests.get(url, timeout=20)
+        if resp.status_code == 404:
+            return []
+        resp.raise_for_status()
+        jobs = resp.json().get("jobs", [])
+        fetched = date.today()
+        return [_norm_ashby(j, company, fetched) for j in jobs]
+    except requests.RequestException as exc:
+        print(f"    [Ashby] {company}: FAILED — {exc}")
+        return []
+
+
+def _norm_smartrecruiters(raw: dict, company: str, fetched: date) -> dict:
+    loc = raw.get("location") or {}
+    location = ", ".join(p for p in (loc.get("city"), loc.get("country")) if p)
+    return {
+        "title":       (raw.get("name") or "").strip(),
+        "company":     company,
+        "location":    location,
+        "job_board":   "smartrecruiters",
+        "url":         (raw.get("ref") or raw.get("applyUrl") or "").strip(),
+        "description": "",  # full text needs a per-posting detail call; title gates suffice
+        "posted_date": str(raw.get("releasedDate") or fetched)[:10],
+        "raw_data":    json.dumps(raw, ensure_ascii=False),
+    }
+
+
+def fetch_smartrecruiters(company: str, ats_id: str) -> list[dict]:
+    url = f"https://api.smartrecruiters.com/v1/companies/{ats_id}/postings?limit=100"
+    try:
+        resp = requests.get(url, timeout=20)
+        if resp.status_code == 404:
+            return []
+        resp.raise_for_status()
+        postings = resp.json().get("content", [])
+        fetched = date.today()
+        return [_norm_smartrecruiters(p, company, fetched) for p in postings]
+    except requests.RequestException as exc:
+        print(f"    [SmartRecruiters] {company}: FAILED — {exc}")
+        return []
+
+
+# Dispatch a watchlist company to the right ATS connector by its ats_provider.
+_ATS_FETCHERS = {
+    "greenhouse":      fetch_greenhouse,
+    "lever":           fetch_lever,
+    "ashby":           fetch_ashby,
+    "smartrecruiters": fetch_smartrecruiters,
+}
+
+
+def fetch_company(company: dict) -> list[dict]:
+    """Fetch raw jobs for one watchlist company via its ATS. [] if provider unknown."""
+    fn = _ATS_FETCHERS.get(company.get("ats_provider", ""))
+    return fn(company.get("name", ""), company.get("ats_id", "")) if fn else []
+
+
 # ── Job processor ──────────────────────────────────────────────────────────────
 
 def _process_job(job: dict, exclude_keywords: list[str], stats: dict) -> Optional[int]:
@@ -506,11 +584,8 @@ def _run_watch_mode(profile: dict, stats: dict) -> None:
             ats = company.get("ats_provider", "")
             ats_id = company.get("ats_id", "")
 
-            if ats == "greenhouse":
-                raw_jobs = fetch_greenhouse(name, ats_id)
-            elif ats == "lever":
-                raw_jobs = fetch_lever(name, ats_id)
-            else:
+            raw_jobs = fetch_company(company)   # greenhouse/lever/ashby/smartrecruiters
+            if not raw_jobs and ats not in _ATS_FETCHERS:
                 continue
 
             if not raw_jobs:
@@ -640,12 +715,29 @@ def _print_summary(stats: dict, xlsx_path: Optional[Path]) -> None:
 
 # ── Entry point ────────────────────────────────────────────────────────────────
 
+def _run_public_boards(profile: dict, stats: dict) -> None:
+    """Search public boards (LinkedIn/Indeed/WTTJ via Apify) and process results
+    through the same dedup/gating/persistence as ATS jobs. No-op without Apify."""
+    from agents import apify_search
+
+    jobs = apify_search.search_public_boards(profile)
+    if not jobs:
+        return
+    print(f"[Public] {len(jobs)} job(s) from public boards (LinkedIn/Indeed/WTTJ)")
+    exclude_kws = profile.get("application_preferences", {}).get("exclude_title_keywords", [])
+    for job in jobs:
+        _process_job(job, exclude_kws, stats)
+    database.log_search(query="public_boards", job_board="apify",
+                        jobs_found=len(jobs), filters_used={})
+
+
 def run() -> None:
     profile = load_profile()
     stats: dict = {}
 
     print("\n[Search Agent] ATS watchlist run starting...")
     _run_watch_mode(profile, stats)
+    _run_public_boards(profile, stats)   # LinkedIn/Indeed/WTTJ via Apify (if enabled)
 
     today_str = date.today().isoformat()
     xlsx_path = Path(config.OUTPUTS_DIR) / "exports" / f"jobs_master_{today_str}.xlsx"

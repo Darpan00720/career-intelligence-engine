@@ -61,22 +61,24 @@ class WatchlistSource:
     persistence is the node's job (so dedup/gating run in one place)."""
 
     def fetch(self) -> list[dict]:
-        from agents.search_agent import fetch_greenhouse, fetch_lever
+        from agents import apify_search
+        from agents.search_agent import fetch_company
 
-        path = config.BASE_DIR / "data" / "company_watchlist.json"
-        if not path.exists():
-            logger.warning("watchlist not found at %s; no jobs acquired", path)
-            return []
-        data = json.loads(path.read_text(encoding="utf-8"))
         out: list[dict] = []
-        for company in data.get("companies", []):
-            ats = company.get("ats_provider", "")
-            ats_id = company.get("ats_id", "")
-            name = company.get("name", "")
-            if ats == "greenhouse":
-                out += fetch_greenhouse(name, ats_id)
-            elif ats == "lever":
-                out += fetch_lever(name, ats_id)
+        # ATS company boards (greenhouse/lever/ashby/smartrecruiters) from the watchlist.
+        path = config.BASE_DIR / "data" / "company_watchlist.json"
+        if path.exists():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            for company in data.get("companies", []):
+                out += fetch_company(company)
+        else:
+            logger.warning("watchlist not found at %s", path)
+        # Public boards (LinkedIn/Indeed/WTTJ via Apify) — no-op without apify-client/key.
+        try:
+            from core.profile_loader import load as load_profile
+            out += apify_search.search_public_boards(load_profile())
+        except Exception as exc:  # public-board search is best-effort
+            logger.warning("public-board search failed: %s", exc)
         return out
 
 
