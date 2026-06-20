@@ -125,21 +125,69 @@ def profile_strategy_node(state: CareerState) -> dict:
 
 
 def _map_profile(raw: dict) -> CareerProfile:
-    """Map candidate_profile.json (flexible shape) to CareerProfile."""
+    """Map candidate_profile.json -> CareerProfile.
+
+    WHY THIS CHANGED: the canonical profile schema is NESTED (personal / skills /
+    target_roles / target_geography / ...), but this mapper previously read only
+    FLAT top-level keys. With a nested profile every lookup missed, so the model
+    silently fell back to placeholders (name='Candidate',
+    target_primary=['unknown'], locations=['EU']). It now reads the nested schema
+    FIRST and falls back to the legacy flat keys, so both shapes work (backward
+    compatible). No new business rules: values are taken verbatim from the data —
+    role titles are NOT re-classified here, so the existing track gate in
+    profile_strategy_node is unchanged.
+    """
     def _as_list(v):
         if isinstance(v, list):
             return [str(x) for x in v]
         if isinstance(v, str):
             return [v]
         return []
+
+    personal = raw.get("personal") if isinstance(raw.get("personal"), dict) else {}
+    geography = raw.get("target_geography") if isinstance(raw.get("target_geography"), dict) else {}
+    roles = raw.get("target_roles")
+    skills = raw.get("skills")
+
+    # name: nested personal.name (+ last_name) -> legacy flat name/full_name.
+    nested_name = " ".join(str(personal[k]) for k in ("name", "last_name") if personal.get(k))
+    name = nested_name or raw.get("name") or raw.get("full_name") or "Candidate"
+
+    # strengths: flatten the nested skills dict's lists -> legacy flat skills list.
+    if isinstance(skills, dict):
+        strengths = [str(s) for group in skills.values()
+                     if isinstance(group, list) for s in group]
+    else:
+        strengths = _as_list(raw.get("strengths") or skills)
+
+    # target roles: flatten nested track lists (track_1* -> primary, track_2* ->
+    # secondary) -> legacy flat target_primary / target_roles list.
+    if isinstance(roles, dict):
+        primary = [str(x) for k, v in roles.items()
+                   if k.startswith("track_1") and isinstance(v, list) for x in v]
+        secondary = [str(x) for k, v in roles.items()
+                     if k.startswith("track_2") and isinstance(v, list) for x in v]
+    else:
+        primary = _as_list(raw.get("target_primary") or raw.get("target_roles"))
+        secondary = _as_list(raw.get("target_secondary"))
+    target_primary = primary or _as_list(raw.get("target_primary")) or ["unknown"]
+    target_secondary = secondary or _as_list(raw.get("target_secondary"))
+
+    # locations: nested target_geography.preferred_locations / based_in /
+    # personal.location -> legacy flat locations / location.
+    nested_locs = (_as_list(geography.get("preferred_locations"))
+                   or _as_list(geography.get("based_in"))
+                   or _as_list(personal.get("location")))
+    locations = nested_locs or _as_list(raw.get("locations") or raw.get("location")) or ["EU"]
+
     return CareerProfile(
-        name=str(raw.get("name") or raw.get("full_name") or "Candidate"),
+        name=str(name),
         years_experience=int(raw.get("years_experience") or raw.get("years") or 0),
-        strengths=_as_list(raw.get("strengths") or raw.get("skills")),
+        strengths=strengths,
         gaps=_as_list(raw.get("gaps")),
-        target_primary=_as_list(raw.get("target_primary") or raw.get("target_roles")) or ["unknown"],
-        target_secondary=_as_list(raw.get("target_secondary")),
-        locations=_as_list(raw.get("locations") or raw.get("location")) or ["EU"],
+        target_primary=target_primary,
+        target_secondary=target_secondary,
+        locations=locations,
         needs_sponsorship=bool(raw.get("needs_sponsorship", True)),
     )
 
