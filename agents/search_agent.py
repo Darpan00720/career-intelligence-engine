@@ -731,12 +731,29 @@ def _run_public_boards(profile: dict, stats: dict) -> None:
                         jobs_found=len(jobs), filters_used={})
 
 
+def _run_career_sites(profile: dict, stats: dict) -> None:
+    """Search company career pages (JSON-LD / RSS) for jobs from companies on no
+    ATS. Processed through the same dedup/gating/persistence. No-op if no config."""
+    from agents import career_site_search
+
+    jobs = career_site_search.search_career_sites()
+    if not jobs:
+        return
+    print(f"[CareerSites] {len(jobs)} job(s) from company career pages")
+    exclude_kws = profile.get("application_preferences", {}).get("exclude_title_keywords", [])
+    for job in jobs:
+        _process_job(job, exclude_kws, stats)
+    database.log_search(query="career_sites", job_board="career_site",
+                        jobs_found=len(jobs), filters_used={})
+
+
 def run() -> None:
     profile = load_profile()
     stats: dict = {}
 
     print("\n[Search Agent] ATS watchlist run starting...")
     _run_watch_mode(profile, stats)
+    _run_career_sites(profile, stats)    # company career pages (JSON-LD / RSS)
     _run_public_boards(profile, stats)   # LinkedIn/Indeed/WTTJ via Apify (if enabled)
 
     today_str = date.today().isoformat()

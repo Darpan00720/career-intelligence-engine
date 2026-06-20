@@ -61,7 +61,7 @@ class WatchlistSource:
     persistence is the node's job (so dedup/gating run in one place)."""
 
     def fetch(self) -> list[dict]:
-        from agents import apify_search
+        from agents import apify_search, career_site_search
         from agents.search_agent import fetch_company
 
         out: list[dict] = []
@@ -73,6 +73,11 @@ class WatchlistSource:
                 out += fetch_company(company)
         else:
             logger.warning("watchlist not found at %s", path)
+        # Company career pages (JSON-LD / RSS) — no ATS required.
+        try:
+            out += career_site_search.search_career_sites()
+        except Exception as exc:  # best-effort
+            logger.warning("career-site search failed: %s", exc)
         # Public boards (LinkedIn/Indeed/WTTJ via Apify) — no-op without apify-client/key.
         try:
             from core.profile_loader import load as load_profile
