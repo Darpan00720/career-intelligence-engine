@@ -18,12 +18,16 @@ class Phase(str, Enum):
 
     INIT = "init"
     PROFILE = "profile_strategy"
+    ACQUISITION = "acquire_jobs"   # v6: opt-in write-capable acquisition stage
     INGESTION = "job_ingestion"
     TAXONOMY = "taxonomy"
     SCORING = "scoring"
+    RESEARCH = "research"          # v6: opt-in cost-incurring research stage
     INTELLIGENCE = "opportunity_intel"
     PRIORITIZATION = "prioritization"
     RECOMMENDATIONS = "recommendations"
+    DOCUMENTS = "documents"        # v6: documents stage (now run via the terminal runner)
+    TERMINAL = "terminal"          # v6: ordered terminal runner (documents/export/tracker)
     OUTPUT = "output_experience"
     REPORT = "report"
     DONE = "done"

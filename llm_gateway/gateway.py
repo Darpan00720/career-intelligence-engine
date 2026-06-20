@@ -86,9 +86,11 @@ class LLMGateway:
 
     # ── Helpers ──────────────────────────────────────────────────────────────
     @staticmethod
-    def _cache_key(prompt: str, model: str) -> str:
-        digest = hashlib.sha256(f"{model}::{prompt}".encode()).hexdigest()[:32]
-        return f"llm:{digest}"
+    def _cache_key(prompt: str, model: str, tenant_id: str) -> str:
+        # Tenant is part of the key so one tenant's cached completion (which may
+        # embed that tenant's data in the prompt) is never served to another.
+        digest = hashlib.sha256(f"{tenant_id}::{model}::{prompt}".encode()).hexdigest()[:32]
+        return f"llm:{tenant_id}:{digest}"
 
     def _record(self, comp, provider_name, model, latency_ms, cached,
                 tenant_id, workflow_id, agent, request_id) -> LLMResponse:
@@ -113,7 +115,7 @@ class LLMGateway:
         model = model or config.CLAUDE_MODEL
         tenant_id = tenant_id or current_tenant()
         request_id = uuid.uuid4().hex
-        key = self._cache_key(prompt, model)
+        key = self._cache_key(prompt, model, tenant_id)
 
         # Cache / request dedup.
         if use_cache:

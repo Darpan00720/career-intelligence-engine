@@ -2,91 +2,81 @@
 
 Mounted at /api/v2. The existing /api/* CRM routes remain as the v1 surface
 (unchanged for backward compatibility). New endpoints expose workflows, reviews,
-experiments, metrics, tenants, and usage. Tenant isolation comes from the
-X-Tenant-ID header (defaults to 'default'); a fixed-window limiter guards each
-client; API keys are accepted via X-API-Key.
+experiments, metrics, tenants, and usage.
+
+Security: every route depends on :func:`api.auth.authenticate`. When ``API_KEYS``
+is configured, requests must present a valid ``X-API-Key`` and the tenant is
+bound to that key (the ``X-Tenant-ID`` header / ``?tenant=`` query param are
+ignored, so a client cannot read another tenant's data). When no keys are
+configured the API runs in open/dev mode and the tenant falls back to the
+``X-Tenant-ID`` header. A fixed-window limiter (``api.auth.rate_limit``) guards
+each tenant. Workflow lookups are tenant-scoped to prevent cross-tenant access.
 """
 from __future__ import annotations
 
-import time
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
-from fastapi import APIRouter, Header, HTTPException, Query, Response
-
+from api.auth import authenticate, tenant_ctx
 from api.crm_models import Page
 
-router = APIRouter(prefix="/api/v2", tags=["v2"])
+router = APIRouter(prefix="/api/v2", tags=["v2"], dependencies=[Depends(authenticate)])
 
 
-# ── Tenant isolation ──────────────────────────────────────────────────────────
-
-def _tenant(x_tenant_id: str | None = Header(default=None)) -> str:
-    from core import tenancy
-    tid = x_tenant_id or tenancy.DEFAULT_TENANT
-    tenancy._current_tenant.set(tid)   # scope this request to the tenant
-    return tid
-
-
-# ── Simple fixed-window rate limiter ──────────────────────────────────────────
-
-_RL_WINDOW = 60.0
-_RL_MAX = 600
-_rl_state: dict[str, tuple[float, int]] = {}
-
-
-def _rate_limit(key: str) -> None:
-    now = time.time()
-    start, count = _rl_state.get(key, (now, 0))
-    if now - start >= _RL_WINDOW:
-        start, count = now, 0
-    count += 1
-    _rl_state[key] = (start, count)
-    if count > _RL_MAX:
-        raise HTTPException(429, "rate limit exceeded")
+def _owns_run(run: dict | None, tenant: str) -> bool:
+    """True when the run exists and belongs to the requesting tenant."""
+    return bool(run) and run.get("tenant_id") == tenant
 
 
 # ── Workflows ─────────────────────────────────────────────────────────────────
 
 @router.get("/workflows", response_model=Page)
 def list_workflows(limit: int = Query(50, ge=1, le=500), offset: int = Query(0, ge=0),
-                   status: str | None = None, tenant: str = None):  # type: ignore
-    from core import database, tenancy
-    tenant = tenant or tenancy.current_tenant()
-    _rate_limit(f"{tenant}:workflows")
-    with database.get_connection() as conn:
-        rows = conn.execute(
-            "SELECT * FROM workflow_runs WHERE tenant_id = ? ORDER BY id DESC", (tenant,)
-        ).fetchall()
-    items = [dict(r) for r in rows]
+                   status: str | None = None, tenant: str = Depends(tenant_ctx)):
+    from core import database
+    params: list = [tenant]
+    sql = "SELECT * FROM workflow_runs WHERE tenant_id = ?"
     if status:
-        items = [r for r in items if r["status"] == status]
-    return Page(items=items[offset:offset + limit], total=len(items), limit=limit, offset=offset)
+        sql += " AND status = ?"
+        params.append(status)
+    count_sql = sql.replace("SELECT *", "SELECT COUNT(*) AS n", 1)
+    sql += " ORDER BY id DESC LIMIT ? OFFSET ?"
+    params_page = params + [limit, offset]
+    with database.get_connection() as conn:
+        total = conn.execute(count_sql, params).fetchone()["n"]
+        rows = conn.execute(sql, params_page).fetchall()
+    items = [dict(r) for r in rows]
+    return Page(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.get("/workflows/{run_id}")
-def get_workflow(run_id: str):
+def get_workflow(run_id: str, tenant: str = Depends(tenant_ctx)):
     from core.workflow_engine import get_engine
     run = get_engine().get_run(run_id)
-    if run is None:
+    if not _owns_run(run, tenant):
         raise HTTPException(404, "workflow run not found")
     return run
 
 
 @router.post("/workflows/{run_id}/retry")
-def retry_workflow(run_id: str):
+def retry_workflow(run_id: str, tenant: str = Depends(tenant_ctx)):
     from core.workflow_engine import get_engine
+    engine = get_engine()
+    if not _owns_run(engine.get_run(run_id), tenant):
+        raise HTTPException(404, "workflow run not found")
     try:
-        status = get_engine().resume(run_id)
+        status = engine.resume(run_id)
     except KeyError as exc:
         raise HTTPException(400, str(exc))
     return {"run_id": run_id, "status": status}
 
 
 @router.post("/workflows/{run_id}/cancel")
-def cancel_workflow(run_id: str):
+def cancel_workflow(run_id: str, tenant: str = Depends(tenant_ctx)):
     from core.workflow_engine import get_engine
-    if get_engine().get_run(run_id) is None:
+    engine = get_engine()
+    if not _owns_run(engine.get_run(run_id), tenant):
         raise HTTPException(404, "workflow run not found")
-    get_engine().cancel(run_id)
+    engine.cancel(run_id)
     return {"run_id": run_id, "status": "CANCELLED"}
 
 
@@ -104,9 +94,11 @@ def list_reviews(state: str | None = None, limit: int = Query(100, ge=1, le=1000
 def list_experiments(limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, ge=0)):
     from core import database
     with database.get_connection() as conn:
-        rows = conn.execute("SELECT * FROM experiments ORDER BY id DESC").fetchall()
-    items = [dict(r) for r in rows]
-    return Page(items=items[offset:offset + limit], total=len(items), limit=limit, offset=offset)
+        total = conn.execute("SELECT COUNT(*) AS n FROM experiments").fetchone()["n"]
+        rows = conn.execute(
+            "SELECT * FROM experiments ORDER BY id DESC LIMIT ? OFFSET ?", (limit, offset)
+        ).fetchall()
+    return Page(items=[dict(r) for r in rows], total=total, limit=limit, offset=offset)
 
 
 # ── Metrics / tenants / usage ─────────────────────────────────────────────────
@@ -131,10 +123,9 @@ def list_tenants(limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, 
 
 
 @router.get("/usage")
-def usage(tenant: str = None):  # type: ignore
+def usage(tenant: str = Depends(tenant_ctx)):
     from core import tenancy
     from core.cost_intelligence import cost_breakdown
-    tenant = tenant or tenancy.current_tenant()
     return {"tenant_id": tenant, "usage": tenancy.get_usage(tenant_id=tenant),
             "cost": cost_breakdown()}
 

@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import re
+import tempfile
 import time
 from pathlib import Path
 
@@ -82,12 +83,36 @@ def _call_claude(message: str) -> str:
     return resp.content[0].text.strip()
 
 
+def atomic_write_text(path: Path, content: str) -> None:
+    """Crash-safe write: stage to a temp file in the same dir, fsync, then
+    os.replace (atomic on POSIX). The canonical path therefore never holds a
+    partially-written/truncated file — a crash mid-write leaves the old file
+    intact (or no file), never a corrupt one. Used by every document write so
+    the write-only-if-missing projection can trust that 'file exists' means
+    'file is complete'.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(content)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
 def _write_doc(job: dict, doc_type: str, content: str, doc_version: int) -> Path:
     docs_dir = Path(config.OUTPUTS_DIR) / _DOCS_SUBDIR
-    docs_dir.mkdir(parents=True, exist_ok=True)
     fname = f"{_slug(job.get('company'))}_{_slug(job.get('title'))}_{doc_type}_v{doc_version}.md"
     path = docs_dir / fname
-    path.write_text(content, encoding="utf-8")
+    atomic_write_text(path, content)
     return path
 
 

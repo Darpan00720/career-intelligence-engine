@@ -303,6 +303,14 @@ def scoring_node(state: CareerState) -> dict:
             # per-job isolation: skip the job, keep the batch alive
             continue
 
+    # v6 (opt-in): persist scores to the DB. Idempotent upsert by job_id, so a
+    # checkpoint replay / retry overwrites rather than duplicates. Off by default.
+    from graph.persistence import persist_scores, score_persistence_enabled
+    if score_persistence_enabled() and scored:
+        role_by_id = {c.job_id: c.role_category for c in (state.get("classified_jobs") or [])}
+        n = persist_scores(scored, role_by_id)
+        logger.info("scoring: persisted %d score(s) to DB", n)
+
     return {
         "phase": Phase.SCORING,
         "scored_jobs": scored,

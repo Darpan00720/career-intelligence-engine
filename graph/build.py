@@ -28,18 +28,28 @@ from graph.nodes import (
     supervisor_node,
     taxonomy_node,
 )
+from graph.ingestion_writable import acquire_jobs_node
+from graph.research_writable import research_node
 from graph.routing import route_from_supervisor
+from graph.terminal_stages import terminal_node
 from graph.state import CareerState
 
 # All workers are active in Sprint 3 (full path through prioritization).
+# `acquire_jobs` is a write-capable node that the supervisor only routes to when
+# ENABLE_ACQUISITION is set (graph.persistence.acquisition_enabled); otherwise it
+# is a registered-but-never-selected target (orphan-safe), so the default graph
+# is unchanged.
 _WORKERS = {
     "profile_strategy": profile_strategy_node,
+    "acquire_jobs": acquire_jobs_node,
     "job_ingestion": job_ingestion_node,
     "taxonomy": taxonomy_node,
     "scoring": scoring_node,
+    "research": research_node,
     "opportunity_intel": opportunity_intel_node,
     "prioritization": prioritization_node,
     "recommendations": recommendations_node,
+    "terminal": terminal_node,
     "output_experience": output_experience_node,
 }
 

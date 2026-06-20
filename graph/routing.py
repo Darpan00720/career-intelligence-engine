@@ -28,12 +28,15 @@ _NEXT_NODE: dict = {
     None: "profile_strategy",
     Phase.INIT: "profile_strategy",
     Phase.PROFILE: "job_ingestion",
+    Phase.ACQUISITION: "job_ingestion",   # opt-in acquisition feeds ingestion
     Phase.INGESTION: "taxonomy",
     Phase.TAXONOMY: "scoring",
     Phase.SCORING: "opportunity_intel",
+    Phase.RESEARCH: "opportunity_intel",  # opt-in research returns to the chain
     Phase.INTELLIGENCE: "prioritization",
     Phase.PRIORITIZATION: "recommendations",
     Phase.RECOMMENDATIONS: "output_experience",
+    Phase.TERMINAL: "output_experience",  # opt-in terminal stages rejoin the chain
     Phase.OUTPUT: END,
     Phase.REPORT: END,
     Phase.DONE: END,
@@ -62,6 +65,25 @@ def ready_agents(state: CareerState) -> list[str]:
     return [t.agent for t in plan.ready_tasks(completed)]
 
 
+def _gated_transitions() -> dict:
+    """Opt-in write-capable stages keyed by the phase they divert from.
+
+    Each entry maps ``from_phase -> (node, enabled_predicate)``. When the
+    predicate is True the supervisor routes to that write node instead of the
+    default ``_NEXT_NODE`` hop; the node then advances to its own phase, which
+    rejoins the legacy chain via ``_NEXT_NODE``. Default (all flags off) leaves
+    routing byte-for-byte unchanged. This table replaces stacked ``if`` branches
+    so adding the next gated stage (documents/export) stays a one-line change.
+    """
+    from graph.persistence import acquisition_enabled, research_enabled
+    from graph.terminal_stages import any_terminal_enabled
+    return {
+        Phase.PROFILE: ("acquire_jobs", acquisition_enabled),
+        Phase.SCORING: ("research", research_enabled),
+        Phase.RECOMMENDATIONS: ("terminal", any_terminal_enabled),
+    }
+
+
 def route_from_supervisor(state: CareerState):
     """Return the next node, a list of parallel nodes, or END.
 
@@ -69,7 +91,13 @@ def route_from_supervisor(state: CareerState):
     """
     plan = as_plan(state.get("execution_plan"))
     if plan is None:
-        return _NEXT_NODE.get(state.get("phase"), END)
+        phase = state.get("phase")
+        gate = _gated_transitions().get(phase)
+        if gate is not None:
+            node, enabled = gate
+            if enabled():
+                return node
+        return _NEXT_NODE.get(phase, END)
 
     completed = set(state.get("completed_tasks") or [])
     if plan.is_complete(completed):

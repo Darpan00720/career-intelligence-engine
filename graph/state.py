@@ -65,6 +65,15 @@ class CareerState(TypedDict, total=False):
     scored_jobs: Annotated[list[ScoredJob], merge_by_job_id]
     scoring_stats: ScoringStats
 
+    # --- research phase (opt-in; ENABLE_RESEARCH) ---
+    research_stats: dict
+
+    # --- documents phase (opt-in; ENABLE_DOCUMENTS) ---
+    documents_stats: dict
+
+    # --- terminal runner (opt-in; documents/export/tracker) ---
+    terminal_stats: dict
+
     # --- intelligence phase ---
     intelligence: Annotated[list[OpportunityIntelligence], merge_by_job_id]
 
@@ -125,6 +134,9 @@ class CareerStateModel(CareerBaseModel):
 
     scored_jobs: Optional[list[ScoredJob]] = None
     scoring_stats: Optional[ScoringStats] = None
+    research_stats: Optional[dict] = None
+    documents_stats: Optional[dict] = None
+    terminal_stats: Optional[dict] = None
 
     intelligence: Optional[list[OpportunityIntelligence]] = None
 

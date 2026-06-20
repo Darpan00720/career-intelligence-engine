@@ -23,9 +23,13 @@ def get_connection():
     fetches, so prompt close is safe.
     """
     Path(config.DB_PATH).parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(config.DB_PATH)
+    conn = sqlite3.connect(config.DB_PATH, timeout=5.0)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    # Concurrency: WAL lets readers run alongside a writer; busy_timeout makes
+    # writers wait for the lock instead of failing fast with "database is locked".
+    conn.execute("PRAGMA busy_timeout = 5000")
+    conn.execute("PRAGMA journal_mode = WAL")
     try:
         yield conn
         conn.commit()
@@ -594,6 +598,8 @@ def _migrate(conn: sqlite3.Connection) -> None:
                 ("source_hash",   "TEXT"),
                 ("prompt_hash",   "TEXT"),
                 ("research_hash", "TEXT"),
+                # v6: DB is content-authoritative; the file is a projection.
+                ("content",       "TEXT"),
             ]:
                 _safe_add_column(conn, "documents", _col, _def)
 
@@ -1010,17 +1016,17 @@ def insert_document(job_id: int, doc_type: str, file_path: str, file_name: str,
                     word_count: int, version: int, langgraph_run_id: str,
                     prompt_version: str,
                     source_hash: str = None, prompt_hash: str = None,
-                    research_hash: str = None) -> int:
+                    research_hash: str = None, content: str = None) -> int:
     with get_connection() as conn:
         cursor = conn.execute(
             """INSERT INTO documents
                (job_id, type, file_path, file_name, word_count, version,
                 langgraph_run_id, prompt_version,
-                source_hash, prompt_hash, research_hash)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                source_hash, prompt_hash, research_hash, content)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (job_id, doc_type, file_path, file_name, word_count, version,
              langgraph_run_id, prompt_version,
-             source_hash, prompt_hash, research_hash)
+             source_hash, prompt_hash, research_hash, content)
         )
         return cursor.lastrowid
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from api.auth import authenticate
 from api.dependencies import bind_request_ids
 from api.models import (
     AnalyzeRequest,
@@ -26,13 +27,15 @@ def _api_response(state: dict) -> ApiResponse:
 
 
 @router.post("/analyze", response_model=ApiResponse, tags=["analysis"])
-async def analyze(req: AnalyzeRequest, _ids=Depends(bind_request_ids)) -> ApiResponse:
+async def analyze(req: AnalyzeRequest, _ids=Depends(bind_request_ids),
+                  _auth=Depends(authenticate)) -> ApiResponse:
     state = career_service.analyze_profile(req.thread_id, req.profile_path, req.limit)
     return _api_response(state)
 
 
 @router.post("/resume/{thread_id}", response_model=ApiResponse, tags=["analysis"])
-async def resume(thread_id: str, _ids=Depends(bind_request_ids)) -> ApiResponse:
+async def resume(thread_id: str, _ids=Depends(bind_request_ids),
+                 _auth=Depends(authenticate)) -> ApiResponse:
     state = career_service.resume_run(thread_id)
     return _api_response(state)
 

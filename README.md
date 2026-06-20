@@ -36,10 +36,16 @@ Career Intelligence Engine aims to become an AI career co-pilot that not only fi
 
 🌐 Production APIs
 
-* Health endpoint
-* Readiness endpoint
-* Version endpoint
-* Career intelligence APIs
+* Health / readiness / version endpoints
+* Career intelligence + CRM REST API (jobs, recommendations, analytics, applications)
+* Versioned Gateway (v2) for workflows, experiments, metrics, tenants, usage
+
+🔐 Security & Multi-Tenancy
+
+* API-key authentication (enforced when `API_KEYS` is configured)
+* Tenant bound to the API key — closes cross-tenant access on the v2 surface
+* Per-tenant fixed-window rate limiting
+* PII masking, retention, and GDPR tenant deletion helpers
 
 📊 Observability
 
@@ -116,6 +122,22 @@ Verify Service
 curl http://localhost:8000/health
 curl http://localhost:8000/ready
 curl http://localhost:8000/version
+
+⸻
+
+🔐 Authentication
+
+The ops endpoints (`/health`, `/ready`, `/version`) are always open. The CRM
+(`/api/*`) and Gateway (`/api/v2/*`) surfaces require an API key **when configured**:
+
+```
+# .env — comma-separated keys, each optionally bound to a tenant
+API_KEYS=key_acme:acme,key_globex:globex
+```
+
+When `API_KEYS` is set, send `X-API-Key: key_acme`; the tenant is derived from the
+key (a client cannot read another tenant's data). With no keys configured the API
+runs in open/dev mode. Production deployments should always set `API_KEYS`.
 
 ⸻
 

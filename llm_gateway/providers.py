@@ -52,10 +52,18 @@ class EchoProvider(Provider):
 class AnthropicProvider(Provider):  # pragma: no cover - requires API key/network
     name = "anthropic"
 
+    def __init__(self) -> None:
+        self._client = None
+
+    def _get_client(self):
+        # Reuse one client (and its HTTP connection pool) across calls.
+        if self._client is None:
+            import anthropic
+            self._client = anthropic.Anthropic()
+        return self._client
+
     def complete(self, prompt: str, model: str, max_tokens: int = 1024, **kw) -> Completion:
-        import anthropic
-        client = anthropic.Anthropic()
-        resp = client.messages.create(
+        resp = self._get_client().messages.create(
             model=model, max_tokens=max_tokens,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -66,9 +74,7 @@ class AnthropicProvider(Provider):  # pragma: no cover - requires API key/networ
         return Completion(text, pt, ct, model)
 
     def stream(self, prompt: str, model: str, max_tokens: int = 1024, **kw):
-        import anthropic
-        client = anthropic.Anthropic()
-        with client.messages.stream(
+        with self._get_client().messages.stream(
             model=model, max_tokens=max_tokens,
             messages=[{"role": "user", "content": prompt}],
         ) as stream:

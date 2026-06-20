@@ -42,12 +42,15 @@ CANONICAL_ORDER: list[str] = list(CANONICAL_DEPS)
 # Human-readable capability label per agent (for explainability / registry lookup).
 CAPABILITY: dict[str, str] = {
     "profile_strategy": "profile",
+    "acquire_jobs": "acquire_jobs",
+    "research": "research",
     "job_ingestion": "ingest_jobs",
     "taxonomy": "classify_jobs",
     "scoring": "score_jobs",
     "opportunity_intel": "opportunity_intelligence",
     "prioritization": "prioritize",
     "recommendations": "recommend",
+    "terminal": "terminal_stages",
     "output_experience": "present_output",
 }
 
@@ -83,6 +86,42 @@ _DEFAULT_TARGET = "output_experience"
 _DEFAULT_KIND = "full_pipeline"
 
 
+# Opt-in write-capable stages, each inserted between a predecessor and the
+# successor whose dependency it takes over. (node, predecessor, successor, flag).
+# Adding the next stage (documents/export) is a one-line append here.
+def _optional_stages() -> list[tuple[str, str, str, bool]]:
+    from graph.persistence import acquisition_enabled, research_enabled
+    from graph.terminal_stages import any_terminal_enabled
+    return [
+        ("acquire_jobs", "profile_strategy", "job_ingestion",    acquisition_enabled()),
+        ("research",     "scoring",          "opportunity_intel", research_enabled()),
+        # The terminal runner (documents/export/tracker) is one planner node.
+        ("terminal",     "recommendations",  "output_experience", any_terminal_enabled()),
+    ]
+
+
+def _active_deps() -> dict[str, list[str]]:
+    """Canonical deps, augmented with whichever opt-in stages are enabled.
+
+    Each enabled stage is spliced in (``successor`` now depends on it). Default
+    (all flags off) is the base 8-node chain unchanged.
+    """
+    deps = {k: list(v) for k, v in CANONICAL_DEPS.items()}
+    for node, pred, succ, enabled in _optional_stages():
+        if enabled:
+            deps[node] = [pred]
+            deps[succ] = [node]
+    return deps
+
+
+def _active_order() -> list[str]:
+    order = list(CANONICAL_ORDER)
+    for node, _pred, succ, enabled in _optional_stages():
+        if enabled and node not in order:
+            order.insert(order.index(succ), node)
+    return order
+
+
 def classify_intent(user_query: str) -> tuple[str, str]:
     """Map a query to a (terminal_agent, intent_kind) pair. Deterministic.
 
@@ -99,7 +138,9 @@ def classify_intent(user_query: str) -> tuple[str, str]:
 
 def select_agents(target: str) -> list[str]:
     """Return ``target`` plus all transitive prerequisites, in canonical order."""
-    if target not in CANONICAL_DEPS:
+    deps = _active_deps()
+    order = _active_order()
+    if target not in deps:
         target = _DEFAULT_TARGET
     needed: set[str] = set()
 
@@ -107,14 +148,15 @@ def select_agents(target: str) -> list[str]:
         if agent in needed:
             return
         needed.add(agent)
-        for dep in CANONICAL_DEPS[agent]:
+        for dep in deps[agent]:
             _collect(dep)
 
     _collect(target)
-    return [a for a in CANONICAL_ORDER if a in needed]
+    return [a for a in order if a in needed]
 
 
 def _make_tasks(agents: list[str]) -> list[Task]:
+    deps = _active_deps()
     included = set(agents)
     return [
         Task(
@@ -123,14 +165,14 @@ def _make_tasks(agents: list[str]) -> list[Task]:
             capability=CAPABILITY.get(agent, ""),
             # only keep deps that are part of this plan (always true for a
             # prefix-closed selection, but filtered defensively)
-            depends_on=[d for d in CANONICAL_DEPS[agent] if d in included],
+            depends_on=[d for d in deps[agent] if d in included],
         )
         for agent in agents
     ]
 
 
 def _full_pipeline_tasks() -> list[Task]:
-    return _make_tasks(CANONICAL_ORDER)
+    return _make_tasks(_active_order())
 
 
 def build_dependency_graph(plan: ExecutionPlan) -> DependencyGraph:

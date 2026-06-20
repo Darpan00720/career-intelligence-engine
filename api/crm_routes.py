@@ -6,11 +6,14 @@ under /api so the existing LangGraph routes are untouched.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from api.auth import authenticate
 from api.crm_models import MessageResponse, Page, PipelineRunRequest, StatusUpdate
 
-router = APIRouter(prefix="/api", tags=["crm"])
+# Auth is enforced on the whole CRM surface when API_KEYS is configured; in open
+# (dev) mode the dependency is a no-op so existing clients are unaffected.
+router = APIRouter(prefix="/api", tags=["crm"], dependencies=[Depends(authenticate)])
 
 _SORT_FIELDS = {"total_score", "fetched_date", "company", "rank"}
 
