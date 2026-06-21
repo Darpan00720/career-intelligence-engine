@@ -43,15 +43,18 @@ class TestPlannerAcquisition(unittest.TestCase):
             plan = planner.build_execution_plan("")
             ids = plan.task_ids()
             self.assertIn("acquire_jobs", ids)
-            self.assertLess(ids.index("acquire_jobs"), ids.index("job_ingestion"))
-            # ingestion now depends on acquisition
+            self.assertIn("prefilter_jobs", ids)
+            # chain: acquire -> prefilter -> ingestion
+            self.assertLess(ids.index("acquire_jobs"), ids.index("prefilter_jobs"))
+            self.assertLess(ids.index("prefilter_jobs"), ids.index("job_ingestion"))
             ing = next(t for t in plan.tasks if t.id == "job_ingestion")
-            self.assertEqual(ing.depends_on, ["acquire_jobs"])
+            self.assertEqual(ing.depends_on, ["prefilter_jobs"])
 
     def test_enabled_ingest_only_pulls_in_acquisition(self):
         with patch.dict(os.environ, {"ENABLE_ACQUISITION": "1"}):
             agents = planner.select_agents("job_ingestion")
-        self.assertEqual(agents, ["profile_strategy", "acquire_jobs", "job_ingestion"])
+        self.assertEqual(
+            agents, ["profile_strategy", "acquire_jobs", "prefilter_jobs", "job_ingestion"])
 
 
 class TestPhaseRouting(unittest.TestCase):
@@ -65,9 +68,12 @@ class TestPhaseRouting(unittest.TestCase):
             nxt = routing.route_from_supervisor({"phase": Phase.PROFILE})
         self.assertEqual(nxt, "acquire_jobs")
 
-    def test_acquisition_phase_routes_to_ingestion(self):
-        nxt = routing.route_from_supervisor({"phase": Phase.ACQUISITION})
-        self.assertEqual(nxt, "job_ingestion")
+    def test_enabled_profile_routes_through_prefilter(self):
+        # acquire -> prefilter -> ingestion
+        self.assertEqual(routing.route_from_supervisor({"phase": Phase.ACQUISITION}),
+                         "prefilter_jobs")
+        self.assertEqual(routing.route_from_supervisor({"phase": Phase.PREFILTER}),
+                         "job_ingestion")
 
 
 class TestBuildRegistersNode(unittest.TestCase):

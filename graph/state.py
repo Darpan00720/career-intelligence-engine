@@ -51,6 +51,12 @@ class CareerState(TypedDict, total=False):
     track_strategy: TrackStrategy
     resume_embedding_ref: Optional[str]
 
+    # --- acquisition / prefilter phase (opt-in) ---
+    # Raw fetched jobs flow acquire -> prefilter -> job_ingestion as plain dicts
+    # (last-write-wins; no reducer). prefilter_stats is observability only.
+    jobs: list[dict]
+    prefilter_stats: dict
+
     # --- ingestion phase ---
     sources: list[str]
     ingested_jobs: Annotated[list[IngestedJob], merge_by_job_id]
@@ -124,6 +130,8 @@ class CareerStateModel(CareerBaseModel):
     track_strategy: Optional[TrackStrategy] = None
     resume_embedding_ref: Optional[str] = None
 
+    jobs: Optional[list[dict]] = None
+    prefilter_stats: Optional[dict] = None
     sources: Optional[list[str]] = None
     ingested_jobs: Optional[list[IngestedJob]] = None
     rejected_jobs: Optional[list[dict]] = None

@@ -192,6 +192,26 @@ def _map_profile(raw: dict) -> CareerProfile:
     )
 
 
+# --- 1b. PreFilter (cheap, deterministic, pre-persistence) ----------------- #
+def prefilter_jobs_node(state: CareerState) -> dict:
+    """Filter raw acquired jobs (state["jobs"]) before persistence/scoring.
+
+    Coarse, deterministic gate only (expired / duplicate / geo / role keywords) —
+    no scoring, taxonomy, language/visa gates, embeddings, or LLM calls.
+    """
+    _enter("prefilter_jobs")
+    from core.prefilter import prefilter_jobs
+
+    kept, stats = prefilter_jobs(state.get("jobs") or [], state.get("profile"))
+    logger.info(
+        "Prefilter: total=%d kept=%d duplicates=%d geo_rejected=%d role_rejected=%d expired=%d",
+        stats["total"], stats["kept"], stats["duplicates"], stats["geo_rejected"],
+        stats["role_rejected"], stats["expired"],
+    )
+    return {"phase": Phase.PREFILTER, "jobs": kept, "prefilter_stats": stats,
+            "audit_log": ["prefilter_jobs"]}
+
+
 # --- 2. Job Ingestion (wraps search_agent gates) -------------------------- #
 def job_ingestion_node(state: CareerState) -> dict:
     _enter("job_ingestion")
@@ -200,6 +220,13 @@ def job_ingestion_node(state: CareerState) -> dict:
     run_id = state.get("run_id")
     try:
         rows = get_provider(run_id).fetch()
+        # Acquisition path: state["jobs"] holds the prefiltered lightweight refs;
+        # ingest only those (by url). Legacy/read-only runs have no state["jobs"]
+        # and ingest every provider row (unchanged).
+        kept = state.get("jobs")
+        if kept is not None:
+            keep_urls = {r.get("url") for r in kept if r.get("url")}
+            rows = [row for row in rows if row.get("url") in keep_urls]
         ingested: list[IngestedJob] = []
         rejected: list[dict] = []
         reasons: dict[str, int] = {}

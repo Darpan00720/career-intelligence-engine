@@ -19,6 +19,7 @@ class Phase(str, Enum):
     INIT = "init"
     PROFILE = "profile_strategy"
     ACQUISITION = "acquire_jobs"   # v6: opt-in write-capable acquisition stage
+    PREFILTER = "prefilter_jobs"   # v6: cheap pre-persistence filter
     INGESTION = "job_ingestion"
     TAXONOMY = "taxonomy"
     SCORING = "scoring"

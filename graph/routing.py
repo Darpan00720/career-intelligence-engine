@@ -28,7 +28,8 @@ _NEXT_NODE: dict = {
     None: "profile_strategy",
     Phase.INIT: "profile_strategy",
     Phase.PROFILE: "job_ingestion",
-    Phase.ACQUISITION: "job_ingestion",   # opt-in acquisition feeds ingestion
+    Phase.ACQUISITION: "prefilter_jobs",  # opt-in acquisition -> prefilter -> ingestion
+    Phase.PREFILTER: "job_ingestion",
     Phase.INGESTION: "taxonomy",
     Phase.TAXONOMY: "scoring",
     Phase.SCORING: "opportunity_intel",

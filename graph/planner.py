@@ -43,6 +43,7 @@ CANONICAL_ORDER: list[str] = list(CANONICAL_DEPS)
 CAPABILITY: dict[str, str] = {
     "profile_strategy": "profile",
     "acquire_jobs": "acquire_jobs",
+    "prefilter_jobs": "prefilter_jobs",
     "research": "research",
     "job_ingestion": "ingest_jobs",
     "taxonomy": "classify_jobs",
@@ -92,9 +93,13 @@ _DEFAULT_KIND = "full_pipeline"
 def _optional_stages() -> list[tuple[str, str, str, bool]]:
     from graph.persistence import acquisition_enabled, research_enabled
     from graph.terminal_stages import any_terminal_enabled
+    acq = acquisition_enabled()
     return [
-        ("acquire_jobs", "profile_strategy", "job_ingestion",    acquisition_enabled()),
-        ("research",     "scoring",          "opportunity_intel", research_enabled()),
+        # acquisition inserts TWO nodes: profile -> acquire -> prefilter -> ingestion.
+        # (prefilter listed first so _active_order resolves its successor in base order.)
+        ("prefilter_jobs", "acquire_jobs",     "job_ingestion",     acq),
+        ("acquire_jobs",   "profile_strategy", "prefilter_jobs",    acq),
+        ("research",       "scoring",          "opportunity_intel", research_enabled()),
         # The terminal runner (documents/export/tracker) is one planner node.
         ("terminal",     "recommendations",  "output_experience", any_terminal_enabled()),
     ]

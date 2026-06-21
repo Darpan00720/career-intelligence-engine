@@ -20,6 +20,7 @@ from graph.checkpoint import get_checkpointer
 from graph.nodes import (
     job_ingestion_node,
     opportunity_intel_node,
+    prefilter_jobs_node,
     prioritization_node,
     output_experience_node,
     profile_strategy_node,
@@ -42,6 +43,7 @@ from graph.state import CareerState
 _WORKERS = {
     "profile_strategy": profile_strategy_node,
     "acquire_jobs": acquire_jobs_node,
+    "prefilter_jobs": prefilter_jobs_node,
     "job_ingestion": job_ingestion_node,
     "taxonomy": taxonomy_node,
     "scoring": scoring_node,

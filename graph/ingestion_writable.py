@@ -207,12 +207,28 @@ def _stats_to_schema(stats: dict) -> IngestionStats:
 
 # ── The node ─────────────────────────────────────────────────────────────────────
 
-def acquire_jobs_node(state: dict) -> dict:
-    """Acquire + persist jobs idempotently, then register the read-only provider.
+def _lightweight_ref(job: dict) -> dict:
+    """Minimal fields the prefilter needs — deliberately NO description/raw_data.
+    Keeps state["jobs"] (which is checkpointed every superstep) at ~200 B/job
+    instead of ~18 KB/job. The full payload lives only in the DB."""
+    return {
+        "url": job.get("url"),
+        "title": job.get("title"),
+        "company": job.get("company"),
+        "location": job.get("location"),
+        "is_expired": bool(job.get("is_expired", False)),
+    }
 
-    Returns a partial state update (``ingestion_stats`` + ``audit_log``). The DB
-    write and provider registration are deliberate side effects performed once
-    per (run_id, source) and safe to replay.
+
+def acquire_jobs_node(state: dict) -> dict:
+    """Fetch + persist full job payloads, then emit LIGHTWEIGHT refs to state.
+
+    The full description/raw_data are persisted to the DB here and never enter
+    checkpointed state — state["jobs"] carries only the fields the prefilter
+    needs (url/title/company/location/is_expired). Persisting raw is cheap; the
+    expensive scoring stays gated by the prefilter (job_ingestion ingests only
+    the kept refs). Row-level idempotency (dedup_hash / unique url) keeps replay
+    safe; no extra registry is introduced.
     """
     from agents.search_agent import _process_job
     from graph.nodes import _enter
@@ -220,37 +236,20 @@ def acquire_jobs_node(state: dict) -> dict:
     _enter("acquire_jobs")  # register in EXECUTION_LOG like every peer node
     run_id = state.get("run_id") or "default"
     source = get_raw_source(run_id)
-    raw_jobs = source.fetch()
-    signature = _source_signature(raw_jobs)
-    logger.info("acquire_jobs: run=%s fetched=%d sig=%s", run_id, len(raw_jobs), signature)
+    full = source.fetch()
 
-    # Run-level guard: this run already ingested this exact batch → skip work.
-    prior = _already_ingested(run_id, signature)
-    if prior is not None:
-        logger.info("acquire_jobs: idempotent skip (already ingested) run=%s", run_id)
-        _register_readonly_provider(run_id)
-        return {
-            "phase": Phase.ACQUISITION,
-            "ingestion_stats": _stats_to_schema(prior),
-            "audit_log": ["acquire_jobs(skipped:already-ingested)"],
-        }
-
-    # First time for this (run, batch): persist via the row-idempotent processor.
-    exclude_keywords = _exclude_keywords()
+    exclude = _exclude_keywords()
     stats: dict = {}
-    for raw in raw_jobs:
+    for job in full:
         try:
-            _process_job(raw, exclude_keywords, stats)  # dedups + inserts; safe to repeat
+            _process_job(job, exclude, stats)   # dedups + inserts full payload
         except Exception as exc:  # one bad row must not abort acquisition
-            logger.warning("acquire_jobs: row failed (%s): %s", raw.get("url"), exc)
-            stats["errors"] = stats.get("errors", 0) + 1
+            logger.warning("acquire_jobs: row failed (%s): %s", job.get("url"), exc)
 
-    _mark_ingested(run_id, signature, stats)
     _register_readonly_provider(run_id)
-    logger.info("acquire_jobs: accepted=%d duplicates=%d", stats.get("accepted", 0),
-                stats.get("duplicates", 0))
+    logger.info("acquire_jobs: fetched=%d accepted=%d", len(full), stats.get("accepted", 0))
     return {
         "phase": Phase.ACQUISITION,
-        "ingestion_stats": _stats_to_schema(stats),
+        "jobs": [_lightweight_ref(j) for j in full],   # lightweight only
         "audit_log": ["acquire_jobs"],
     }
