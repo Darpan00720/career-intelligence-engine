@@ -115,6 +115,32 @@ def metrics_prometheus():
     return Response(content=registry().render_prometheus(), media_type="text/plain")
 
 
+# ── Pipeline observability (read-only aggregation) ────────────────────────────
+
+@router.get("/metrics/funnel")
+def metrics_funnel():
+    from core import pipeline_metrics
+    return pipeline_metrics.pipeline_funnel()
+
+
+@router.get("/metrics/scoring")
+def metrics_scoring():
+    from core import pipeline_metrics
+    return pipeline_metrics.scoring_metrics()
+
+
+@router.get("/metrics/acquisition")
+def metrics_acquisition():
+    from core import pipeline_metrics
+    return pipeline_metrics.acquisition_metrics()
+
+
+@router.get("/metrics/dashboard")
+def metrics_dashboard_data():
+    from core import pipeline_metrics
+    return pipeline_metrics.dashboard_data()
+
+
 @router.get("/tenants", response_model=Page)
 def list_tenants(limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, ge=0)):
     from core import tenancy

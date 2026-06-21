@@ -39,8 +39,15 @@ def analyze_profile(thread_id: str, profile_path: str | None = None,
     try:
         cfg = {"configurable": {"thread_id": thread_id}}
         with timed("analyze", thread_id=thread_id):
-            return _graph().invoke(
+            state = _graph().invoke(
                 new_career_state(run_id=thread_id, profile_path=profile_path), cfg)
+        # Observability: snapshot this run's per-stage stats (read-only, additive).
+        try:
+            from core import pipeline_metrics
+            pipeline_metrics.record_run(state)
+        except Exception:  # metrics capture must never affect the run result
+            logger.exception("pipeline_metrics.record_run failed")
+        return state
     finally:
         clear_provider(thread_id)
 

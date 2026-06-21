@@ -89,6 +89,10 @@ def create_app() -> FastAPI:
     # v5 API Gateway v2 — workflows, reviews, experiments, metrics, tenants, usage.
     from api.v2_routes import router as v2_router
     app.include_router(v2_router)
+
+    # Observability dashboard (HTML; no auth so it's openable locally).
+    from api.dashboard_routes import router as dashboard_router
+    app.include_router(dashboard_router)
     return app
 
 
