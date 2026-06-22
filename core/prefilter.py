@@ -35,6 +35,13 @@ ROLE_KEYWORDS = [
 
 _WORLDWIDE = re.compile(r"\b(anywhere|worldwide)\b", re.IGNORECASE)
 
+# Clearly-senior title markers — the candidate targets internship/junior roles,
+# so these are rejected unless the title also carries an intern/graduate signal
+# (e.g. "Senior ... Internship"). "Product Manager" alone is NOT senior.
+_SENIOR_TITLE = re.compile(
+    r"\b(senior|sr\.?|staff|principal|lead|head\s+of|director|"
+    r"vice[\s-]?president|vp|chief|distinguished|president)\b", re.IGNORECASE)
+
 
 def _norm(value: str | None) -> str:
     return re.sub(r"\s+", " ", (value or "").strip().lower())
@@ -63,6 +70,19 @@ def _role_rejected(title: str | None) -> bool:
     return not any(kw in t for kw in ROLE_KEYWORDS)
 
 
+def _seniority_rejected(title: str | None) -> bool:
+    """True for clearly-senior titles (Senior/Staff/Principal/Lead/Director/VP/…),
+    unless the title also carries an intern/graduate signal (override). Keeps
+    intern/junior/associate/analyst and plain "Product Manager" roles."""
+    t = (title or "").lower()
+    if not t:
+        return False
+    from agents.search_agent import _INTERN_ACCEPT  # reuse existing accept signal
+    if _INTERN_ACCEPT.search(t):
+        return False
+    return bool(_SENIOR_TITLE.search(t))
+
+
 def prefilter_jobs(
     jobs: list[dict],
     profile,
@@ -80,6 +100,7 @@ def prefilter_jobs(
         "expired": 0,
         "geo_rejected": 0,
         "role_rejected": 0,
+        "seniority_rejected": 0,
         "kept": 0,
         "total": len(jobs),
     }
@@ -99,6 +120,9 @@ def prefilter_jobs(
             continue
         if _role_rejected(job.get("title")):
             stats["role_rejected"] += 1
+            continue
+        if _seniority_rejected(job.get("title")):
+            stats["seniority_rejected"] += 1
             continue
         seen.add(key)
         kept.append(job)

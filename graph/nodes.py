@@ -230,13 +230,18 @@ def job_ingestion_node(state: CareerState) -> dict:
         ingested: list[IngestedJob] = []
         rejected: list[dict] = []
         reasons: dict[str, int] = {}
+        from core.prefilter import _seniority_rejected
         for row in rows:
             loc = row.get("location") or ""
             geo_ok, geo_reason = _check_geography(loc)
             lang_fail = (row.get("language_gate") == "FAIL")
             visa_fail = (row.get("visa_gate") == "FAIL")
             elig_status = (row.get("eligibility_status") or "UNCHECKED")
-            eligible = geo_ok and not lang_fail and not visa_fail and elig_status != "REJECTED"
+            # Candidate targets internship/junior roles — drop clearly-senior titles
+            # here too, so the gate applies whether or not the prefilter node ran.
+            senior = _seniority_rejected(row.get("title"))
+            eligible = (geo_ok and not lang_fail and not visa_fail
+                        and elig_status != "REJECTED" and not senior)
             ij = IngestedJob(
                 job_id=int(row["id"]),
                 title=row.get("title") or "",
@@ -257,8 +262,8 @@ def job_ingestion_node(state: CareerState) -> dict:
             if eligible:
                 ingested.append(ij)
             else:
-                reason = "non_eu" if not geo_ok else ("language" if lang_fail else
-                         ("visa" if visa_fail else "eligibility"))
+                reason = ("non_eu" if not geo_ok else "language" if lang_fail else
+                          "visa" if visa_fail else "seniority" if senior else "eligibility")
                 reasons[reason] = reasons.get(reason, 0) + 1
                 rejected.append({"job_id": ij.job_id, "reason": reason})
         return {

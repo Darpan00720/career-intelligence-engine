@@ -49,7 +49,7 @@ class TestPrefilterRules(unittest.TestCase):
 
     def test_target_roles_retained(self):
         for title in ("AI Strategy Intern", "Data Analyst", "Product Owner",
-                      "Digital Transformation Lead", "Machine Learning Intern"):
+                      "Digital Transformation Analyst", "Machine Learning Intern"):
             kept, _ = prefilter_jobs([_job(title=title)], None)
             self.assertEqual(len(kept), 1, title)
 
@@ -70,7 +70,24 @@ class TestPrefilterRules(unittest.TestCase):
     def test_stats_shape(self):
         _, stats = prefilter_jobs([_job()], None)
         self.assertEqual(set(stats), {"duplicates", "expired", "geo_rejected",
-                                      "role_rejected", "kept", "total"})
+                                      "role_rejected", "seniority_rejected",
+                                      "kept", "total"})
+
+    def test_senior_roles_rejected(self):
+        for title in ("(Senior) Product Manager", "Senior Product Manager",
+                      "Staff Product Manager", "Principal Product Manager",
+                      "Lead Product Strategy", "Head of Product",
+                      "Director of Strategy", "VP Product"):
+            kept, stats = prefilter_jobs([_job(title=title)], None)
+            self.assertEqual(kept, [], title)
+            self.assertEqual(stats["seniority_rejected"], 1, title)
+
+    def test_intern_and_plain_roles_kept(self):
+        for title in ("Product Manager Intern", "AI Product Manager Intern",
+                      "Product Manager", "Junior Product Analyst",
+                      "Data Analyst", "Senior Product Manager Internship"):
+            kept, _ = prefilter_jobs([_job(title=title)], None)
+            self.assertEqual(len(kept), 1, title)   # intern override / not senior
 
 
 class TestPrefilterNode(unittest.TestCase):

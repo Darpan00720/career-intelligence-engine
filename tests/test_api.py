@@ -44,7 +44,8 @@ class TestApiEndpoints(unittest.TestCase):
         r = self.client.get("/version")
         self.assertEqual(r.status_code, 200)
         body = r.json()
-        self.assertEqual(body["version"], "1.0.0")
+        from core.version import VERSION
+        self.assertEqual(body["version"], VERSION)   # tracks the release version
         self.assertEqual(body["name"], "Career Intelligence Engine")
         self.assertTrue(body["system_certified"])
 
