@@ -716,11 +716,12 @@ def _print_summary(stats: dict, xlsx_path: Optional[Path]) -> None:
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 def _run_public_boards(profile: dict, stats: dict) -> None:
-    """Search public boards (LinkedIn/Indeed/WTTJ via Apify) and process results
-    through the same dedup/gating/persistence as ATS jobs. No-op without Apify."""
-    from agents import apify_search
+    """Search aggregators/portals (Adzuna free API + LinkedIn/Indeed/WTTJ via Apify)
+    and process results through the same dedup/gating/persistence as ATS jobs.
+    No-op for any source whose credentials are absent."""
+    from agents import adzuna_search, apify_search
 
-    jobs = apify_search.search_public_boards(profile)
+    jobs = adzuna_search.search_adzuna(profile) + apify_search.search_public_boards(profile)
     if not jobs:
         return
     print(f"[Public] {len(jobs)} job(s) from public boards (LinkedIn/Indeed/WTTJ)")

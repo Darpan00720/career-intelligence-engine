@@ -99,5 +99,30 @@ class TestAtsConnectors(unittest.TestCase):
         self.assertEqual(search_agent.fetch_company({"ats_provider": "nope"}), [])
 
 
+class TestAdzunaSearch(unittest.TestCase):
+    def test_no_creds_degrades_to_empty(self):
+        from agents import adzuna_search
+        env = {k: v for k, v in os.environ.items()
+               if k not in ("ADZUNA_APP_ID", "ADZUNA_APP_KEY")}
+        with patch.dict(os.environ, env, clear=True):
+            self.assertEqual(adzuna_search.search_adzuna({}), [])
+
+    def test_normalizes_results(self):
+        from agents import adzuna_search
+        payload = {"results": [{"title": "AI Product Intern",
+                                "company": {"display_name": "Acme"},
+                                "location": {"display_name": "Milan, Italy"},
+                                "redirect_url": "https://adzuna/1",
+                                "description": "great role", "created": "2026-06-10T00:00:00Z"}]}
+        with patch.dict(os.environ, {"ADZUNA_APP_ID": "x", "ADZUNA_APP_KEY": "y"}), \
+                patch.object(adzuna_search.requests, "get", return_value=_Resp(payload)):
+            jobs = adzuna_search.fetch_adzuna("pm intern", "it")
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]["title"], "AI Product Intern")
+        self.assertEqual(jobs[0]["company"], "Acme")
+        self.assertEqual(jobs[0]["job_board"], "adzuna")
+        self.assertEqual(jobs[0]["url"], "https://adzuna/1")
+
+
 if __name__ == "__main__":
     unittest.main()

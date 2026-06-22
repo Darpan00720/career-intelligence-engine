@@ -23,7 +23,8 @@ import os
 import uuid
 
 # --- Everything is configured here; no env vars needed to run -----------------
-os.environ.setdefault("ENABLE_ACQUISITION", "0")   # 1 = also scrape new jobs first
+# All stages run on every run (no opt-in): search -> filter -> score -> docs -> excel.
+os.environ.setdefault("ENABLE_ACQUISITION", "1")   # search career pages/portals every run
 os.environ.setdefault("ENABLE_CLAUDE_SCORING", "1")  # CV-vs-JD scoring like main.py (reaches 80)
 os.environ.setdefault("PERSIST_SCORES", "1")       # write scores to the DB
 os.environ.setdefault("ENABLE_RESEARCH", "1")      # company research for >=80 matches

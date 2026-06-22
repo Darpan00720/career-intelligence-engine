@@ -78,12 +78,15 @@ class WatchlistSource:
             out += career_site_search.search_career_sites()
         except Exception as exc:  # best-effort
             logger.warning("career-site search failed: %s", exc)
-        # Public boards (LinkedIn/Indeed/WTTJ via Apify) — no-op without apify-client/key.
+        # Aggregators / portals (best-effort; no-op without their credentials).
         try:
+            from agents import adzuna_search
             from core.profile_loader import load as load_profile
-            out += apify_search.search_public_boards(load_profile())
-        except Exception as exc:  # public-board search is best-effort
-            logger.warning("public-board search failed: %s", exc)
+            profile = load_profile()
+            out += adzuna_search.search_adzuna(profile)          # Adzuna free API
+            out += apify_search.search_public_boards(profile)    # LinkedIn/Indeed/WTTJ (Apify)
+        except Exception as exc:
+            logger.warning("aggregator search failed: %s", exc)
         return out
 
 

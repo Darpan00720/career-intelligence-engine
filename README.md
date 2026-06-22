@@ -175,7 +175,7 @@ Response:
 
 {
   "name": "Career Intelligence Engine",
-  "version": "7.1.1",
+  "version": "7.1.2",
   "system_certified": true
 }
 
@@ -189,7 +189,7 @@ pytest
 
 📦 Release Information
 
-Current Version: v7.1.1
+Current Version: v7.1.2
 
 Release Status: Production Ready ✅
 
