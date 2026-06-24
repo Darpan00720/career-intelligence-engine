@@ -17,6 +17,7 @@ agent (reused, not reinvented) so behavior stays consistent.
 """
 from __future__ import annotations
 
+import os
 import re
 
 # Intentionally broad target-domain keywords. This is a coarse pre-gate, NOT
@@ -70,6 +71,18 @@ def _role_rejected(title: str | None) -> bool:
     return not any(kw in t for kw in ROLE_KEYWORDS)
 
 
+def intern_only() -> bool:
+    """When INTERN_ONLY is set, keep ONLY internship/graduate/trainee roles."""
+    return os.getenv("INTERN_ONLY", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def is_intern_role(title: str | None) -> bool:
+    """True when the title signals an internship / graduate program / trainee role
+    (reuses the search agent's intern-accept pattern)."""
+    from agents.search_agent import _INTERN_ACCEPT
+    return bool(_INTERN_ACCEPT.search((title or "").lower()))
+
+
 def _seniority_rejected(title: str | None) -> bool:
     """True for clearly-senior titles (Senior/Staff/Principal/Lead/Director/VP/…),
     unless the title also carries an intern/graduate signal (override). Keeps
@@ -101,9 +114,11 @@ def prefilter_jobs(
         "geo_rejected": 0,
         "role_rejected": 0,
         "seniority_rejected": 0,
+        "non_intern_rejected": 0,
         "kept": 0,
         "total": len(jobs),
     }
+    _intern_only = intern_only()
     seen: set = set(existing_job_keys) if existing_job_keys else set()
     kept: list[dict] = []
 
@@ -123,6 +138,9 @@ def prefilter_jobs(
             continue
         if _seniority_rejected(job.get("title")):
             stats["seniority_rejected"] += 1
+            continue
+        if _intern_only and not is_intern_role(job.get("title")):
+            stats["non_intern_rejected"] += 1
             continue
         seen.add(key)
         kept.append(job)

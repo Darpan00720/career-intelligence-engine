@@ -32,6 +32,7 @@ os.environ.setdefault("ENABLE_DOCUMENTS", "1")     # resume + cover letter for >
 os.environ.setdefault("ENABLE_EXPORT", "1")        # outputs/jobs_master.xlsx
 os.environ.setdefault("ENABLE_TRACKER", "1")       # application-tracker rows
 os.environ.setdefault("DB_JOB_LIMIT", "500")       # score all ~437 JDs, not just 10
+os.environ.setdefault("INTERN_ONLY", "1")          # keep ONLY internship/graduate roles
 
 from dotenv import load_dotenv
 

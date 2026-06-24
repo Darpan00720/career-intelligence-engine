@@ -230,18 +230,20 @@ def job_ingestion_node(state: CareerState) -> dict:
         ingested: list[IngestedJob] = []
         rejected: list[dict] = []
         reasons: dict[str, int] = {}
-        from core.prefilter import _seniority_rejected
+        from core.prefilter import _seniority_rejected, intern_only, is_intern_role
+        _intern_only = intern_only()
         for row in rows:
             loc = row.get("location") or ""
             geo_ok, geo_reason = _check_geography(loc)
             lang_fail = (row.get("language_gate") == "FAIL")
             visa_fail = (row.get("visa_gate") == "FAIL")
             elig_status = (row.get("eligibility_status") or "UNCHECKED")
-            # Candidate targets internship/junior roles — drop clearly-senior titles
-            # here too, so the gate applies whether or not the prefilter node ran.
+            # Candidate targets internship/graduate roles — drop senior titles and,
+            # when INTERN_ONLY is set, anything that isn't an internship/graduate role.
             senior = _seniority_rejected(row.get("title"))
+            non_intern = _intern_only and not is_intern_role(row.get("title"))
             eligible = (geo_ok and not lang_fail and not visa_fail
-                        and elig_status != "REJECTED" and not senior)
+                        and elig_status != "REJECTED" and not senior and not non_intern)
             ij = IngestedJob(
                 job_id=int(row["id"]),
                 title=row.get("title") or "",
@@ -263,7 +265,8 @@ def job_ingestion_node(state: CareerState) -> dict:
                 ingested.append(ij)
             else:
                 reason = ("non_eu" if not geo_ok else "language" if lang_fail else
-                          "visa" if visa_fail else "seniority" if senior else "eligibility")
+                          "visa" if visa_fail else "seniority" if senior else
+                          "non_intern" if non_intern else "eligibility")
                 reasons[reason] = reasons.get(reason, 0) + 1
                 rejected.append({"job_id": ij.job_id, "reason": reason})
         return {

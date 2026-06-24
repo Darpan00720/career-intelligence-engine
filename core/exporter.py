@@ -283,6 +283,12 @@ def export_jobs_master_xlsx(output_path: str | None = None) -> str:
 
     ranked = rank_jobs(database.get_all_scored_jobs_ranked())
 
+    # INTERN_ONLY: restrict the dashboard to internship/graduate roles only, so
+    # legacy non-intern rows already scored in the DB don't appear in the sheet.
+    from core.prefilter import intern_only, is_intern_role
+    if intern_only():
+        ranked = [r for r in ranked if is_intern_role(r.get("title"))]
+
     # Enrich each row with the derived dashboard fields.
     for row in ranked:
         row["country"]            = _derive_country(row.get("location"))

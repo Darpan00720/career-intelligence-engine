@@ -4,7 +4,9 @@ End-to-end "downstream receives filtered jobs" and "checkpoint replay works" are
 exercised by tests/test_replay_idempotency.py, whose acquisition flow now routes
 acquire -> prefilter -> job_ingestion.
 """
+import os
 import unittest
+from unittest.mock import patch
 
 from core.prefilter import prefilter_jobs
 from graph.nodes import prefilter_jobs_node
@@ -71,7 +73,31 @@ class TestPrefilterRules(unittest.TestCase):
         _, stats = prefilter_jobs([_job()], None)
         self.assertEqual(set(stats), {"duplicates", "expired", "geo_rejected",
                                       "role_rejected", "seniority_rejected",
-                                      "kept", "total"})
+                                      "non_intern_rejected", "kept", "total"})
+
+
+class TestInternOnly(unittest.TestCase):
+    def test_intern_only_keeps_only_intern_roles(self):
+        with patch.dict(os.environ, {"INTERN_ONLY": "1"}):
+            jobs = [_job(title="Product Manager"),              # mid -> drop
+                    _job(title="Product Manager Intern"),       # keep
+                    _job(title="AI Strategy Graduate Programme"),  # keep
+                    _job(title="Data Analyst"),                 # mid -> drop
+                    _job(title="Working Student – Product")]    # keep
+            kept, stats = prefilter_jobs(jobs, None)
+        titles = {j["title"] for j in kept}
+        self.assertIn("Product Manager Intern", titles)
+        self.assertIn("AI Strategy Graduate Programme", titles)
+        self.assertIn("Working Student – Product", titles)
+        self.assertNotIn("Product Manager", titles)
+        self.assertNotIn("Data Analyst", titles)
+        self.assertEqual(stats["non_intern_rejected"], 2)
+
+    def test_off_by_default_keeps_plain_roles(self):
+        env = {k: v for k, v in os.environ.items() if k != "INTERN_ONLY"}
+        with patch.dict(os.environ, env, clear=True):
+            kept, _ = prefilter_jobs([_job(title="Product Manager")], None)
+        self.assertEqual(len(kept), 1)   # intern-only off -> plain PM kept
 
     def test_senior_roles_rejected(self):
         for title in ("(Senior) Product Manager", "Senior Product Manager",
