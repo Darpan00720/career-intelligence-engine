@@ -38,6 +38,15 @@ locations — and run one command. It will:
 Every score is explainable — it comes with the reasons behind it, so I know *why* a
 role ranked where it did instead of staring at a black-box number.
 
+## What the output looks like
+
+The headline deliverable is `outputs/jobs_master.xlsx` — every match, ranked and
+colour-coded by application priority, with the eligibility fields that matter
+(country, work mode, visa sponsorship). Here's a real run, filtered to Netherlands
++ Italy internships:
+
+![Sample of jobs_master.xlsx](docs/dashboard.svg)
+
 ---
 
 ## The seven agents
