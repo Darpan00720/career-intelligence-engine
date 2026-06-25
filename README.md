@@ -61,37 +61,10 @@ notifications — handle reporting and delivery.)
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    P["Candidate profile · JSON"] --> SUP{{"LangGraph supervisor"}}
+The profile enters a LangGraph supervisor that routes it through the seven agents;
+scoring, research, and document drafting call out to the LLM gateway.
 
-    SUP --> A1["1 · Search"]
-    A1 --> A2["2 · Filter / Eligibility"]
-    A2 --> A3["3 · Scoring"]
-    A3 --> A4["4 · Research"]
-    A4 --> A5["5 · Recommendation"]
-    A5 --> A6["6 · Documents"]
-    A6 --> A7["7 · Export / Tracker"]
-
-    A1 -.->|sources| SRC["Adzuna API · Greenhouse · Lever · Ashby · SmartRecruiters · career sites"]
-    A3 -.->|embeddings| EMB["Semantic matcher · sentence-transformers"]
-
-    A3 -.->|score boost| LLM["LLM gateway"]
-    A4 -.->|research| LLM
-    A6 -.->|drafting| LLM
-    LLM --> CLA["Claude · default"]
-    LLM --> OAI["OpenAI / ChatGPT"]
-    LLM --> OTH["Gemini · Azure · Local"]
-
-    A7 --> DB[("SQLite + checkpoints")]
-    A7 --> XLSX["jobs_master.xlsx"]
-    A6 --> DOCS["résumé + cover letter"]
-
-    APISVC["FastAPI service · /health · /api · /api/v2"] -.->|invokes| SUP
-```
-
-> GitHub renders the diagram above automatically. In a plain Markdown viewer it
-> shows as the code block.
+![Career Intelligence Engine — agent workflow](docs/architecture.svg)
 
 ---
 

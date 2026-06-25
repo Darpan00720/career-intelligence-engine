@@ -1,0 +1,174 @@
+<svg viewBox="0 0 1320 560" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, -apple-system, Segoe UI, Roboto, sans-serif" role="img" aria-label="Career Intelligence Engine agent workflow, styled like an n8n canvas">
+  <defs>
+    <pattern id="grid" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.5" r="1.5" fill="#e4e4ee"/>
+    </pattern>
+    <filter id="ns" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#101020" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#b9b9c8"/>
+    </marker>
+    <marker id="arrp" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#8b7bf0"/>
+    </marker>
+  </defs>
+
+  <!-- canvas -->
+  <rect x="0" y="0" width="1320" height="560" fill="#f7f7fb"/>
+  <rect x="0" y="0" width="1320" height="560" fill="url(#grid)"/>
+  <text x="50" y="40" font-size="16" font-weight="700" fill="#2b2b36">Career Intelligence Engine — agent workflow</text>
+
+  <!-- ===================== connectors (drawn first, under nodes) ===================== -->
+  <!-- row 1 left to right -->
+  <path d="M250,104 C285,104 285,104 310,104" fill="none" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M510,104 C545,104 545,104 570,104" fill="none" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M770,104 C805,104 805,104 830,104" fill="none" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- row1 -> row2 (down) -->
+  <path d="M930,136 C930,185 930,205 930,252" fill="none" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- row 2 right to left -->
+  <path d="M830,284 C800,284 800,284 770,284" fill="none" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M570,284 C540,284 540,284 510,284" fill="none" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M310,284 C280,284 280,284 250,284" fill="none" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- row2 -> outputs (fan) -->
+  <path d="M150,316 C150,380 150,390 150,432" fill="none" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M150,316 C150,392 410,372 410,432" fill="none" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+  <path d="M150,316 C150,410 670,372 670,432" fill="none" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- dotted LLM calls -->
+  <path d="M1030,104 C1058,104 1062,138 1080,150" fill="none" stroke="#8b7bf0" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arrp)"/>
+  <path d="M1030,284 C1060,284 1066,215 1080,200" fill="none" stroke="#8b7bf0" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arrp)"/>
+
+  <!-- ===================== port dots ===================== -->
+  <g fill="#c7c7d2">
+    <circle cx="250" cy="104" r="4"/><circle cx="310" cy="104" r="4"/>
+    <circle cx="510" cy="104" r="4"/><circle cx="570" cy="104" r="4"/>
+    <circle cx="770" cy="104" r="4"/><circle cx="830" cy="104" r="4"/>
+    <circle cx="830" cy="284" r="4"/><circle cx="770" cy="284" r="4"/>
+    <circle cx="570" cy="284" r="4"/><circle cx="510" cy="284" r="4"/>
+    <circle cx="310" cy="284" r="4"/><circle cx="250" cy="284" r="4"/>
+  </g>
+
+  <!-- ===================== ROW 1 ===================== -->
+  <!-- N0 Profile (trigger) -->
+  <g>
+    <rect x="50" y="72" width="200" height="64" rx="14" fill="#ffffff" stroke="#e6e6ee" stroke-width="1.5" filter="url(#ns)"/>
+    <rect x="62" y="88" width="32" height="32" rx="9" fill="#6b7280"/>
+    <path d="M73,97 L83,104 L73,111 Z" fill="#ffffff"/>
+    <text x="104" y="100" font-size="14.5" font-weight="700" fill="#2b2b36">Candidate profile</text>
+    <text x="104" y="117" font-size="11" fill="#8a8a99">JSON input · trigger</text>
+  </g>
+  <!-- N1 Search -->
+  <g>
+    <rect x="310" y="72" width="200" height="64" rx="14" fill="#ffffff" stroke="#e6e6ee" stroke-width="1.5" filter="url(#ns)"/>
+    <rect x="322" y="88" width="32" height="32" rx="9" fill="#2eb8a6"/>
+    <text x="338" y="110" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+    <text x="364" y="100" font-size="14.5" font-weight="700" fill="#2b2b36">Search</text>
+    <text x="364" y="117" font-size="11" fill="#8a8a99">Adzuna · ATS · sites</text>
+  </g>
+  <!-- N2 Filter -->
+  <g>
+    <rect x="570" y="72" width="200" height="64" rx="14" fill="#ffffff" stroke="#e6e6ee" stroke-width="1.5" filter="url(#ns)"/>
+    <rect x="582" y="88" width="32" height="32" rx="9" fill="#f0a93b"/>
+    <text x="598" y="110" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+    <text x="624" y="100" font-size="14.5" font-weight="700" fill="#2b2b36">Filter / Eligibility</text>
+    <text x="624" y="117" font-size="11" fill="#8a8a99">geo · intern · language</text>
+  </g>
+  <!-- N3 Scoring -->
+  <g>
+    <rect x="830" y="72" width="200" height="64" rx="14" fill="#ffffff" stroke="#e6e6ee" stroke-width="1.5" filter="url(#ns)"/>
+    <rect x="842" y="88" width="32" height="32" rx="9" fill="#4a8df0"/>
+    <text x="858" y="110" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+    <text x="884" y="100" font-size="14.5" font-weight="700" fill="#2b2b36">Scoring</text>
+    <text x="884" y="117" font-size="11" fill="#8a8a99">0–100 · semantic</text>
+  </g>
+
+  <!-- ===================== ROW 2 ===================== -->
+  <!-- N4 Research -->
+  <g>
+    <rect x="830" y="252" width="200" height="64" rx="14" fill="#ffffff" stroke="#e6e6ee" stroke-width="1.5" filter="url(#ns)"/>
+    <rect x="842" y="268" width="32" height="32" rx="9" fill="#8b7bf0"/>
+    <text x="858" y="290" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+    <text x="884" y="280" font-size="14.5" font-weight="700" fill="#2b2b36">Research</text>
+    <text x="884" y="297" font-size="11" fill="#8a8a99">company intel</text>
+  </g>
+  <!-- N5 Recommendation -->
+  <g>
+    <rect x="570" y="252" width="200" height="64" rx="14" fill="#ffffff" stroke="#e6e6ee" stroke-width="1.5" filter="url(#ns)"/>
+    <rect x="582" y="268" width="32" height="32" rx="9" fill="#ea4b71"/>
+    <text x="598" y="290" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+    <text x="624" y="280" font-size="14.5" font-weight="700" fill="#2b2b36">Recommendation</text>
+    <text x="624" y="297" font-size="11" fill="#8a8a99">prioritise &amp; rank</text>
+  </g>
+  <!-- N6 Documents -->
+  <g>
+    <rect x="310" y="252" width="200" height="64" rx="14" fill="#ffffff" stroke="#e6e6ee" stroke-width="1.5" filter="url(#ns)"/>
+    <rect x="322" y="268" width="32" height="32" rx="9" fill="#36b37e"/>
+    <text x="338" y="290" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">6</text>
+    <text x="364" y="280" font-size="14.5" font-weight="700" fill="#2b2b36">Documents</text>
+    <text x="364" y="297" font-size="11" fill="#8a8a99">résumé + cover letter</text>
+  </g>
+  <!-- N7 Export / Tracker -->
+  <g>
+    <rect x="50" y="252" width="200" height="64" rx="14" fill="#ffffff" stroke="#e6e6ee" stroke-width="1.5" filter="url(#ns)"/>
+    <rect x="62" y="268" width="32" height="32" rx="9" fill="#ff6d5a"/>
+    <text x="78" y="290" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle">7</text>
+    <text x="104" y="280" font-size="14.5" font-weight="700" fill="#2b2b36">Export / Tracker</text>
+    <text x="104" y="297" font-size="11" fill="#8a8a99">Excel · application log</text>
+  </g>
+
+  <!-- ===================== OUTPUTS ===================== -->
+  <g>
+    <rect x="50" y="432" width="200" height="52" rx="12" fill="#eef0f6" stroke="#dcdce8" stroke-width="1.5"/>
+    <rect x="62" y="446" width="34" height="24" rx="6" fill="#6b7280"/>
+    <text x="79" y="462" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle">DB</text>
+    <text x="106" y="463" font-size="13" font-weight="600" fill="#2b2b36">SQLite store</text>
+  </g>
+  <g>
+    <rect x="310" y="432" width="200" height="52" rx="12" fill="#eef0f6" stroke="#dcdce8" stroke-width="1.5"/>
+    <rect x="322" y="446" width="34" height="24" rx="6" fill="#1e8e5a"/>
+    <text x="339" y="462" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle">XLS</text>
+    <text x="366" y="463" font-size="13" font-weight="600" fill="#2b2b36">jobs_master.xlsx</text>
+  </g>
+  <g>
+    <rect x="570" y="432" width="220" height="52" rx="12" fill="#eef0f6" stroke="#dcdce8" stroke-width="1.5"/>
+    <rect x="582" y="446" width="34" height="24" rx="6" fill="#4a8df0"/>
+    <text x="599" y="462" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle">DOC</text>
+    <text x="626" y="463" font-size="13" font-weight="600" fill="#2b2b36">résumé + cover letter</text>
+  </g>
+
+  <!-- ===================== LLM GATEWAY ===================== -->
+  <g>
+    <rect x="1080" y="72" width="210" height="300" rx="16" fill="#ffffff" stroke="#e6e6ee" stroke-width="1.5" filter="url(#ns)"/>
+    <rect x="1098" y="90" width="30" height="30" rx="8" fill="#8b7bf0"/>
+    <path d="M1106,99 h14 M1106,105 h14 M1106,111 h9" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    <text x="1138" y="102" font-size="14.5" font-weight="700" fill="#2b2b36">LLM gateway</text>
+    <text x="1138" y="117" font-size="10" fill="#8a8a99">model-agnostic · failover</text>
+
+    <rect x="1098" y="134" width="174" height="34" rx="9" fill="#f3f0ff" stroke="#c9bdf6" stroke-width="1.3"/>
+    <text x="1112" y="155" font-size="12.5" font-weight="700" fill="#5b46c9">Claude</text>
+    <text x="1258" y="155" font-size="10" fill="#8a8a99" text-anchor="end">default</text>
+
+    <rect x="1098" y="176" width="174" height="34" rx="9" fill="#f6f6fb" stroke="#e2e2ee" stroke-width="1.2"/>
+    <text x="1112" y="197" font-size="12.5" font-weight="600" fill="#2b2b36">OpenAI / ChatGPT</text>
+
+    <rect x="1098" y="218" width="174" height="34" rx="9" fill="#f6f6fb" stroke="#e2e2ee" stroke-width="1.2"/>
+    <text x="1112" y="239" font-size="12.5" font-weight="600" fill="#2b2b36">Gemini</text>
+
+    <rect x="1098" y="260" width="174" height="34" rx="9" fill="#f6f6fb" stroke="#e2e2ee" stroke-width="1.2"/>
+    <text x="1112" y="281" font-size="12.5" font-weight="600" fill="#2b2b36">Azure OpenAI</text>
+
+    <rect x="1098" y="302" width="174" height="34" rx="9" fill="#f6f6fb" stroke="#e2e2ee" stroke-width="1.2"/>
+    <text x="1112" y="323" font-size="12.5" font-weight="600" fill="#2b2b36">Local</text>
+
+    <text x="1138" y="356" font-size="9.5" fill="#8a8a99">called by Scoring · Research · Documents</text>
+  </g>
+
+  <!-- ===================== LEGEND ===================== -->
+  <g>
+    <line x1="50" y1="520" x2="86" y2="520" stroke="#c2c2cf" stroke-width="2" marker-end="url(#arr)"/>
+    <text x="94" y="524" font-size="11" fill="#8a8a99">workflow step</text>
+    <line x1="210" y1="520" x2="246" y2="520" stroke="#8b7bf0" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arrp)"/>
+    <text x="254" y="524" font-size="11" fill="#8a8a99">LLM call</text>
+    <text x="350" y="524" font-size="11" fill="#8a8a99">State checkpointed to SQLite · orchestrated by a LangGraph supervisor</text>
+  </g>
+</svg>
