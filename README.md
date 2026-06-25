@@ -1,5 +1,10 @@
 # Career Intelligence Engine
 
+[![CI](https://github.com/Darpan00720/career-intelligence-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Darpan00720/career-intelligence-engine/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.12%2B-blue)
+![Tests](https://img.shields.io/badge/tests-1%2C200%2B%20passing-brightgreen)
+![Built with](https://img.shields.io/badge/built%20with-LangGraph%20%2B%20Claude-8A2BE2)
+
 A multi-agent job-search assistant I built to run my own internship hunt.
 
 I'm an MBA candidate looking for product, strategy, and AI roles across the
@@ -12,6 +17,17 @@ my CV, and drafts a first-pass résumé and cover letter for the strongest match
 It started as a weekend script and grew into a proper **multi-agent system** —
 seven specialized agents, coordinated by a supervisor, each owning one part of the
 search — with a real test suite and an API. I still use it, so I keep improving it.
+
+> **Try it in 10 seconds, no setup:** `python3 run_graph.py --demo` runs the whole
+> pipeline on bundled sample jobs — no API keys, no credits. See [the demo](#try-it-in-10-seconds-no-keys-needed).
+
+## Contents
+
+- [What it does](#what-it-actually-does) · [What the output looks like](#what-the-output-looks-like)
+- [The seven agents](#the-seven-agents) · [Architecture](#architecture) · [See it run](#see-it-run)
+- [The filters](#the-filters-that-matter-and-why) · [Tech stack](#tech-stack) · [Models / LLMs](#models-llms)
+- [Run it yourself](#run-it-yourself) · [10-second demo](#try-it-in-10-seconds-no-keys-needed) · [API](#theres-also-an-api)
+- [Honest limitations](#honest-limitations) · [Project layout](#project-layout)
 
 ---
 
@@ -85,9 +101,10 @@ to the output:
 
 ![Running python3 run_graph.py — from command to output](docs/run.gif)
 
-### Each stage, up close
+<details>
+<summary><b>▶ Watch each of the seven stages on its own</b> (7 short clips)</summary>
 
-The same run, broken into its seven stages — one short clip each:
+<br>
 
 **1 · Search** — pull open roles from Adzuna + the ATS APIs + career-site feeds
 
@@ -116,6 +133,8 @@ The same run, broken into its seven stages — one short clip each:
 **7 · Export / Tracker** — write the ranked `jobs_master.xlsx` and update the tracker
 
 ![Stage 7 — Export](docs/stage7.gif)
+
+</details>
 
 ---
 
@@ -172,17 +191,31 @@ cd career-intelligence-engine
 pip install -r requirements.txt
 ```
 
-Add your keys to a `.env` file (see `.env.example`), then run the whole pipeline
-with a single command:
+### Try it in 10 seconds (no keys needed)
+
+```bash
+python3 run_graph.py --demo
+```
+
+Runs the real pipeline on a handful of bundled sample jobs — **no API keys, no
+credits, no live search.** It loads eight roles, filters them to the Netherlands +
+Italy / internships / English-sufficient, scores them, and writes
+`outputs/demo_jobs_master.xlsx`. You'll see exactly which roles are dropped and why
+(out-of-geography, not an internship, requires a non-English language). It uses an
+isolated `data/demo.db`, so your real database is never touched.
+
+### The full run
+
+Add your keys to a `.env` file (see `.env.example`), then:
 
 ```bash
 python3 run_graph.py
 ```
 
-That searches, filters, scores, and writes `outputs/jobs_master.xlsx` end to end.
-The richer features — the Claude scoring adjustment, company research, and the
-auto-drafted résumé/cover letter — kick in when an Anthropic API key with credit is
-present; without it, the deterministic scoring and the Excel export still run.
+That searches live boards, filters, scores, and writes `outputs/jobs_master.xlsx`
+end to end. The richer features — the Claude scoring adjustment, company research,
+and the auto-drafted résumé/cover letter — kick in when an Anthropic API key with
+credit is present; without it, the deterministic scoring and the Excel still run.
 
 ---
 
