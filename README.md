@@ -4,6 +4,7 @@
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue)
 ![Tests](https://img.shields.io/badge/tests-1%2C200%2B%20passing-brightgreen)
 ![Built with](https://img.shields.io/badge/built%20with-LangGraph%20%2B%20Claude-8A2BE2)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A multi-agent job-search assistant I built to run my own internship hunt.
 
@@ -275,4 +276,8 @@ Built by **Darpan Jain** — MBA candidate, focused on AI product management,
 digital transformation, and technology strategy.
 
 This is a personal project: I built it to learn and to run my own job search, and
-I'm sharing it as part of my portfolio. Released for educational and portfolio use.
+I'm sharing it as part of my portfolio.
+
+## License
+
+Released under the [MIT License](LICENSE) — free to use, study, and build on.
