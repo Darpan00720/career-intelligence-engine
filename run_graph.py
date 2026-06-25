@@ -20,6 +20,7 @@ ENABLE_ACQUISITION=1 below (off by default — your JDs are already in the DB).
 from __future__ import annotations
 
 import os
+import sys
 import uuid
 
 # --- Everything is configured here; no env vars needed to run -----------------
@@ -64,7 +65,92 @@ def _make_claude_scoring_hook():
     return _hook
 
 
+def run_demo() -> None:
+    """Zero-keys, zero-credit demo: score bundled sample jobs and write a dashboard.
+
+    Runs the real pipeline (filter -> deterministic scoring -> export) against an
+    ISOLATED demo database (data/demo.db) so the real career_agent.db is never
+    touched. No Anthropic credit, no Adzuna keys, no live search — just the bundled
+    data/demo_jobs.json. Demonstrates the geography, internship, and language
+    filters and produces outputs/demo_jobs_master.xlsx.
+    """
+    import json
+    from pathlib import Path
+
+    from core import config, database
+    from core.eligibility import check_eligibility
+    from core.exporter import export_jobs_master_xlsx
+    from core.language_detector import detect_jd_language
+    import graph.providers as gp
+
+    base = Path(config.BASE_DIR)
+    demo_db = str(base / "data" / "demo.db")
+    config.DB_PATH = demo_db        # database.get_connection() reads this dynamically
+    gp.DB_PATH = demo_db            # DbJobProvider binds it at import; override here
+    for ext in ("", "-wal", "-shm"):
+        Path(demo_db + ext).unlink(missing_ok=True)
+    database.initialize()
+
+    # Load the sample jobs and pre-evaluate eligibility (mirrors the real
+    # acquisition path) so the language/visa gates are populated for filtering.
+    jobs = json.loads((base / "data" / "demo_jobs.json").read_text())
+    for j in jobs:
+        jid = database.insert_job(title=j["title"], company=j["company"],
+                                  location=j["location"], job_board="demo",
+                                  url=j["url"], description=j["description"])
+        if not jid:
+            continue
+        elig = check_eligibility(j["description"], company=j["company"])
+        database.update_job_eligibility(
+            job_id=jid, language_gate=elig.language_gate,
+            language_rejection_reason=elig.language_rejection_reason,
+            visa_gate=elig.visa_gate, visa_rejection_reason=elig.visa_rejection_reason,
+            eligibility_status=elig.eligibility_status,
+            eligibility_score=elig.eligibility_score,
+            language_accessibility=elig.language_accessibility,
+            visa_accessibility=elig.visa_accessibility,
+            english_environment=elig.english_environment,
+            international_signals=elig.international_signals)
+        det = detect_jd_language(j["description"])
+        database.update_job_language_detection(
+            job_id=jid, detected_language=det.detected_language,
+            language_risk=det.language_risk,
+            eligibility_review_required=det.eligibility_review_required)
+
+    # Deterministic only — overrides the module-level defaults above.
+    os.environ.update({
+        "ENABLE_ACQUISITION": "0", "ENABLE_CLAUDE_SCORING": "0", "ENABLE_RESEARCH": "0",
+        "ENABLE_DOCUMENTS": "0", "PERSIST_SCORES": "1", "ENABLE_EXPORT": "0",
+        "ENABLE_TRACKER": "0", "INTERN_ONLY": "1", "GEO_COUNTRIES": "it,nl",
+        "NON_ENGLISH_AUTO_REJECT": "true", "DB_JOB_LIMIT": "100",
+    })
+    config.NON_ENGLISH_AUTO_REJECT = True   # read at import; force it for the demo
+
+    from services.career_service import analyze_profile
+    print("Demo — no API keys, no credits. Scoring bundled sample jobs…\n")
+    state = analyze_profile(thread_id=f"demo-{uuid.uuid4().hex[:6]}",
+                            profile_path="candidate_profile.json", limit=100)
+
+    out = export_jobs_master_xlsx(str(base / "outputs" / "demo_jobs_master.xlsx"))
+    scored = state.get("scored_jobs") or []
+    ing = {ij.job_id: ij for ij in (state.get("ingested_jobs") or [])}
+    print(f"Sample jobs loaded : {len(jobs)}")
+    print(f"Kept after filters : {len(scored)}  (Netherlands + Italy · interns · English-sufficient)\n")
+    print("Ranked matches:")
+    for sj in sorted(scored, key=lambda s: s.total_score or 0, reverse=True):
+        j = ing.get(sj.job_id)
+        company = j.company if j else "?"
+        title = (j.title if j else str(sj.job_id))[:44]
+        print(f"  {sj.total_score:>3}  {company} — {title}")
+    print(f"\nWrote {out}")
+    print("Filtered out: roles outside NL/Italy (Berlin), non-internships (Senior PM),\n"
+          "and roles requiring a non-English language (Italian-required sales).")
+
+
 def main() -> None:
+    if "--demo" in sys.argv:
+        run_demo()
+        return
     from graph.persistence import _flag
     from graph.providers import clear_claude_hook, set_claude_hook
     from services.career_service import analyze_profile

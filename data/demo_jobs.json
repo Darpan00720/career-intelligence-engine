@@ -1,0 +1,58 @@
+[
+  {
+    "title": "AI Product Intern",
+    "company": "Northwind",
+    "location": "Amsterdam, Netherlands",
+    "url": "https://demo.local/northwind/ai-product-intern",
+    "description": "We are hiring an AI Product Management intern for our English-speaking product team in Amsterdam. You will shape product strategy, work with analytics, and help ship machine-learning features. A graduate internship; English is our working language. No prior visa sponsorship issues for EU students."
+  },
+  {
+    "title": "Product Strategy Intern",
+    "company": "Helios",
+    "location": "Milano, Italy",
+    "url": "https://demo.local/helios/product-strategy-intern",
+    "description": "Internship in product and business strategy at our Milan office. You will support market analysis, go-to-market strategy, and digital transformation initiatives. We are an English-speaking international team; Italian is a plus but not required."
+  },
+  {
+    "title": "Data Analytics Graduate Programme",
+    "company": "Aurora",
+    "location": "Rotterdam, Netherlands",
+    "url": "https://demo.local/aurora/data-analytics-graduate",
+    "description": "A graduate programme in data and analytics. Work with product and strategy teams building dashboards and turning data into insight. Strong SQL and Python. English required; this is an international, English-first environment."
+  },
+  {
+    "title": "Digital Transformation Intern",
+    "company": "Vela",
+    "location": "Bologna, Italy",
+    "url": "https://demo.local/vela/digital-transformation-intern",
+    "description": "Internship supporting digital transformation and innovation projects across the business. You will help with process analysis, technology strategy, and change initiatives. English-speaking environment, graduate level."
+  },
+  {
+    "title": "Business Strategy Intern",
+    "company": "Cobalt",
+    "location": "Eindhoven, Netherlands",
+    "url": "https://demo.local/cobalt/business-strategy-intern",
+    "description": "Join our strategy team as an intern to support competitive analysis, growth strategy, and operating-model work. English is the working language; we welcome international graduate candidates."
+  },
+  {
+    "title": "Sales Intern",
+    "company": "Bottega",
+    "location": "Milano, Italy",
+    "url": "https://demo.local/bottega/sales-intern",
+    "description": "Sales internship working with Italian clients. Fluent Italian is required for daily customer conversations and negotiations. You will support the commercial team in the Milan market."
+  },
+  {
+    "title": "Product Manager Intern",
+    "company": "Falcon",
+    "location": "Berlin, Germany",
+    "url": "https://demo.local/falcon/product-manager-intern",
+    "description": "Product management internship in our Berlin office. Work on product discovery, roadmap, and analytics in an English-speaking team. Graduate level."
+  },
+  {
+    "title": "Senior Product Manager",
+    "company": "Helios",
+    "location": "Milano, Italy",
+    "url": "https://demo.local/helios/senior-product-manager",
+    "description": "We are looking for a Senior Product Manager with 6+ years of experience to lead a product line. English-speaking team in Milan. This is a senior, full-time role, not an internship."
+  }
+]
