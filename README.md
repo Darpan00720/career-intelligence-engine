@@ -85,6 +85,38 @@ to the output:
 
 ![Running python3 run_graph.py — from command to output](docs/run.gif)
 
+### Each stage, up close
+
+The same run, broken into its seven stages — one short clip each:
+
+**1 · Search** — pull open roles from Adzuna + the ATS APIs + career-site feeds
+
+![Stage 1 — Search](docs/stage1.gif)
+
+**2 · Filter / Eligibility** — drop everything outside the geography, seniority, and language rules
+
+![Stage 2 — Filter](docs/stage2.gif)
+
+**3 · Scoring** — rate every survivor 0–100 against the CV (semantic + deterministic)
+
+![Stage 3 — Scoring](docs/stage3.gif)
+
+**4 · Research** — gather company intel for the strong matches
+
+![Stage 4 — Research](docs/stage4.gif)
+
+**5 · Recommendation** — prioritise and rank what to apply to
+
+![Stage 5 — Recommendation](docs/stage5.gif)
+
+**6 · Documents** — draft a tailored résumé + cover letter per top match
+
+![Stage 6 — Documents](docs/stage6.gif)
+
+**7 · Export / Tracker** — write the ranked `jobs_master.xlsx` and update the tracker
+
+![Stage 7 — Export](docs/stage7.gif)
+
 ---
 
 ## The filters that matter (and why)
