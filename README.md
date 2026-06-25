@@ -9,8 +9,9 @@ never kept up to date. So I automated the loop: this project goes out and finds 
 openings, drops the ones I'm not actually eligible for, scores what's left against
 my CV, and drafts a first-pass résumé and cover letter for the strongest matches.
 
-It started as a weekend script and grew into something with a real pipeline, a test
-suite, and an API. I still use it, so I keep improving it.
+It started as a weekend script and grew into a proper **multi-agent system** —
+seven specialized agents, coordinated by a supervisor, each owning one part of the
+search — with a real test suite and an API. I still use it, so I keep improving it.
 
 ---
 
@@ -39,30 +40,58 @@ role ranked where it did instead of staring at a black-box number.
 
 ---
 
-## How it's wired
+## The seven agents
 
-```
-Your profile (JSON)
-      │
-      ▼
-  Search  ──►  find roles from Adzuna + ATS APIs + career sites
-      │
-      ▼
-  Filter  ──►  geography → internship-level → no mandatory non-English
-      │
-      ▼
-  Score   ──►  deterministic 0–100 (+ optional Claude adjustment)
-      │
-      ▼
-  Write   ──►  résumé + cover letter for the strong matches
-      │
-      ▼
-  Export  ──►  ranked Excel dashboard (outputs/jobs_master.xlsx)
+It's a multi-agent system. A LangGraph **supervisor** routes work through seven
+specialized agents, each responsible for one slice of the search:
+
+| # | Agent | What it does |
+|---|---|---|
+| 1 | **Search** | Pulls openings from Adzuna + company ATS APIs (Greenhouse / Lever / Ashby / SmartRecruiters) + career-page feeds |
+| 2 | **Filter / Eligibility** | Drops roles outside my countries, non-internship roles, and anything that requires a language I don't speak |
+| 3 | **Scoring** | Rates each role 0–100 — role fit, semantic skills match, location, seniority — with an optional LLM adjustment |
+| 4 | **Research** | Gathers company context for the strong matches |
+| 5 | **Recommendation** | Prioritizes and ranks what's actually worth applying to |
+| 6 | **Documents** | Drafts a tailored résumé + cover letter |
+| 7 | **Export / Tracker** | Writes the ranked Excel dashboard and logs applications |
+
+The whole run is a LangGraph workflow with its state checkpointed to SQLite, so it
+can pause and resume without redoing work. (Two more agents — analytics and
+notifications — handle reporting and delivery.)
+
+## Architecture
+
+```mermaid
+flowchart TD
+    P["Candidate profile · JSON"] --> SUP{{"LangGraph supervisor"}}
+
+    SUP --> A1["1 · Search"]
+    A1 --> A2["2 · Filter / Eligibility"]
+    A2 --> A3["3 · Scoring"]
+    A3 --> A4["4 · Research"]
+    A4 --> A5["5 · Recommendation"]
+    A5 --> A6["6 · Documents"]
+    A6 --> A7["7 · Export / Tracker"]
+
+    A1 -.->|sources| SRC["Adzuna API · Greenhouse · Lever · Ashby · SmartRecruiters · career sites"]
+    A3 -.->|embeddings| EMB["Semantic matcher · sentence-transformers"]
+
+    A3 -.->|score boost| LLM["LLM gateway"]
+    A4 -.->|research| LLM
+    A6 -.->|drafting| LLM
+    LLM --> CLA["Claude · default"]
+    LLM --> OAI["OpenAI / ChatGPT"]
+    LLM --> OTH["Gemini · Azure · Local"]
+
+    A7 --> DB[("SQLite + checkpoints")]
+    A7 --> XLSX["jobs_master.xlsx"]
+    A6 --> DOCS["résumé + cover letter"]
+
+    APISVC["FastAPI service · /health · /api · /api/v2"] -.->|invokes| SUP
 ```
 
-Under the hood it runs as a **LangGraph** workflow: a set of agents (search,
-filter, score, research, write, export) coordinated by a supervisor, with the run
-state checkpointed to SQLite so a run can pause and resume without redoing work.
+> GitHub renders the diagram above automatically. In a plain Markdown viewer it
+> shows as the code block.
 
 ---
 
@@ -87,7 +116,7 @@ configurable via environment variables, so you can point it at your own search:
 |---|---|
 | Language | Python |
 | Agent orchestration | LangGraph |
-| LLM | Anthropic Claude |
+| LLMs | Claude (default) · OpenAI / ChatGPT · Gemini · Azure · local — via a provider gateway |
 | Semantic matching | Sentence Transformers (`all-MiniLM-L6-v2`) |
 | API | FastAPI |
 | Storage | SQLite |
@@ -95,6 +124,19 @@ configurable via environment variables, so you can point it at your own search:
 | Spreadsheets | openpyxl |
 | Tests | pytest (1,200+ tests) |
 | Packaging | Docker / Docker Compose |
+
+---
+
+## Models (LLMs)
+
+The pipeline runs on **Anthropic Claude** by default — it handles the scoring
+adjustment, company research, and the résumé / cover-letter drafting.
+
+It isn't locked to one vendor, though. The LLM layer is a **provider-agnostic
+gateway** with adapters for **OpenAI (ChatGPT)**, **Azure OpenAI**, **Google
+Gemini**, and a **local** model, behind cost- and latency-aware routing with
+automatic failover. Switch with the `MODEL_PROVIDER` setting; if a provider is down
+or over budget, the router falls back to the next healthy one and keeps going.
 
 ---
 
