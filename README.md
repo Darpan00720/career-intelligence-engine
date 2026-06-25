@@ -78,10 +78,12 @@ scoring, research, and document drafting call out to the LLM gateway.
 
 ### See it run
 
-One pass walks through all seven steps in order — search, filter, score, research,
-recommend, write, export — checkpointing as it goes:
+One command — `python3 run_graph.py` — runs the whole thing end to end: it searches,
+filters to the Netherlands and Italy, scores every role against the CV, drafts
+documents for the strong matches, and writes the ranked dashboard. From the prompt
+to the output:
 
-![Pipeline running step by step](docs/pipeline.gif)
+![Running python3 run_graph.py — from command to output](docs/run.gif)
 
 ---
 
