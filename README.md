@@ -42,9 +42,9 @@ role ranked where it did instead of staring at a black-box number.
 
 The headline deliverable is `outputs/jobs_master.xlsx` — every match, ranked and
 colour-coded by application priority, with the eligibility fields that matter
-(country, work mode, visa sponsorship). Here's a real run, covering **both my target
-markets — the Netherlands and Italy** (HelloFresh is the Amsterdam / Dutch role),
-internships only:
+(country, work mode, visa sponsorship). Below is an illustrative example spanning
+**both target markets — the Netherlands and Italy** — internships only, ranked from
+top matches (green *Apply Now*) down to weaker ones:
 
 ![Sample of jobs_master.xlsx](docs/dashboard.svg)
 
@@ -81,7 +81,7 @@ scoring, research, and document drafting call out to the LLM gateway.
 One pass walks through all seven steps in order — search, filter, score, research,
 recommend, write, export — checkpointing as it goes:
 
-![Pipeline running step by step](docs/pipeline.svg)
+![Pipeline running step by step](docs/pipeline.gif)
 
 ---
 
