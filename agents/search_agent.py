@@ -1,3 +1,4 @@
+import functools
 import hashlib
 import html
 import json
@@ -16,6 +17,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from core import config, database
+from core.eligibility import check_language_gate
 from core.profile_loader import load as load_profile
 from core.role_loader import classify_title
 
@@ -109,6 +111,113 @@ _EU_OK = re.compile(
     r"|bologna|turin|torino|florence|firenze)\b",
     re.IGNORECASE,
 )
+
+# ── Geo focus (env-configurable target countries) ──────────────────────────────
+# When GEO_COUNTRIES is set (e.g. "it,nl"), search + ingestion + export keep ONLY
+# those countries (plus generic remote / Europe-wide postings). Empty/unset keeps
+# the legacy EU-wide behaviour. The live runner (run_graph.py) and .env set
+# "it,nl" so every real run is Netherlands + Italy only — the code default stays
+# empty so pipeline tests remain EU-wide (same pattern as INTERN_ONLY/ENABLE_*).
+# Tokens are matched whole-word (outer \b…\b) so substrings like "roma" inside
+# "Romania" do NOT false-match Italy.
+_GEO_GROUPS: dict[str, str] = {
+    "it": r"ital(?:y|ia)|provincia\s+di|citt[aà]\s+metropolitana"
+          r"|piemonte|piedmont|lombardi[ay]|lazio|toscana|tuscany|veneto|emilia"
+          r"|milan|milano|rom[ae]|turin|torino|naples|napoli|bologna"
+          r"|florence|firenze|venice|venezia|genoa|genova|bari|palermo|verona"
+          r"|padua|padova|brescia|bergamo|modena|catania|novara|como|monza"
+          r"|varese|pavia|cremona|mantova|parma|rimini|piacenza|cameri",
+    "nl": r"netherlands|nederland|holland|noord[\s-]?holland|zuid[\s-]?holland"
+          r"|noord[\s-]?brabant|gelderland|overijssel|limburg|friesland|drenthe"
+          r"|zeeland|flevoland|amsterdam|rotterdam|the\s+hague|den\s+haag"
+          r"|utrecht|eindhoven|groningen|tilburg|breda|nijmegen|haarlem|arnhem"
+          r"|delft|leiden|hilversum|almere|maastricht|amersfoort|apeldoorn|zwolle"
+          r"|enschede|zaandam|'?s[\s-]?hertogenbosch|den\s+bosch",
+    "de": r"german(?:y)?|deutschland|berlin|munich|m[uü]nchen|hamburg|frankfurt"
+          r"|cologne|k[oö]ln|stuttgart|d[uü]sseldorf|hannover|leipzig",
+    "fr": r"france|paris|lyon|marseille|toulouse|bordeaux|nantes|nice|lille|strasbourg",
+    "es": r"spain|espa[nñ]a|madrid|barcelona|valencia|seville|sevilla|m[aá]laga|bilbao",
+    "gb": r"united\s+kingdom|uk|england|scotland|wales|london|manchester|cambridge"
+          r"|oxford|edinburgh|glasgow|birmingham|leeds|bristol|crawley",
+    "ie": r"ireland|dublin",
+    "ch": r"switzerland|zurich|z[uü]rich|geneva|basel|lausanne|bern",
+    "be": r"belgium|brussels|antwerp|ghent|leuven",
+    "at": r"austria|vienna|wien",
+    "pt": r"portugal|lisbon|lisboa|porto",
+    "se": r"sweden|stockholm|gothenburg|malm[oö]",
+    "dk": r"denmark|copenhagen|aarhus",
+    "no": r"norway|oslo",
+    "fi": r"finland|helsinki",
+    "pl": r"poland|warsaw|krak[oó]w|wroc[lł]aw|gda[nń]sk",
+    "cz": r"czech(?:ia)?|prague",
+    "hu": r"hungary|budapest",
+    "ro": r"romania|bucharest|cluj(?:-napoca)?|timisoara|iasi",
+    "bg": r"bulgaria|sofia",
+    "lt": r"lithuania|vilnius",
+    "lv": r"latvia|riga",
+    "ee": r"estonia|tallinn",
+    "cy": r"cyprus|nicosia",
+    "hr": r"croatia|zagreb",
+    "sk": r"slovakia|bratislava",
+    "si": r"slovenia|ljubljana",
+    "lu": r"luxembourg",
+    "mt": r"malta|valletta",
+    "gr": r"greece|athens",
+}
+
+_GENERIC_REMOTE = re.compile(
+    r"\b(remote|anywhere|worldwide|home[\s-]?office|work\s+from\s+home|wfh"
+    r"|europe|european|emea|pan[\s-]?european)\b",
+    re.IGNORECASE,
+)
+
+
+def _focus_codes() -> tuple[str, ...]:
+    """Active geo-focus country codes from GEO_COUNTRIES (e.g. ('it', 'nl')).
+    Unknown codes are ignored; empty/unset → () → legacy EU-wide behaviour
+    (run_graph.py and .env set GEO_COUNTRIES=it,nl for real runs)."""
+    raw = os.getenv("GEO_COUNTRIES", "")
+    return tuple(sorted({c.strip().lower() for c in raw.split(",")
+                         if c.strip() in _GEO_GROUPS}))
+
+
+@functools.lru_cache(maxsize=16)
+def _target_geo_re(codes: tuple[str, ...]) -> re.Pattern:
+    body = "|".join(_GEO_GROUPS[c] for c in codes)
+    return re.compile(rf"\b(?:{body})\b", re.IGNORECASE)
+
+
+@functools.lru_cache(maxsize=16)
+def _other_geo_re(codes: tuple[str, ...]):
+    others = [v for k, v in _GEO_GROUPS.items() if k not in codes]
+    if not others:
+        return None
+    return re.compile(rf"\b(?:{'|'.join(others)})\b", re.IGNORECASE)
+
+
+def geo_outside_focus(location: str | None) -> bool:
+    """Coarse gate: True only when `location` clearly names a place OUTSIDE the
+    active geo focus (GEO_COUNTRIES, e.g. it,nl). Missing / remote / unknown →
+    False (kept; the strict search gate and downstream decide). With no focus
+    set, rejects only clearly non-EU locations — the legacy behaviour."""
+    if not location:
+        return False
+    codes = _focus_codes()
+    if codes:
+        if _target_geo_re(codes).search(location):
+            return False
+        other = _other_geo_re(codes)
+        if other is not None and other.search(location):
+            return True
+        if _NON_EU.search(location) and not _GENERIC_REMOTE.search(location):
+            return True
+        return False
+    # Explicit empty focus: legacy coarse pre-gate rejects only clearly non-EU.
+    if _NON_EU.search(location) and not re.search(
+            r"\b(anywhere|worldwide)\b", location, re.IGNORECASE):
+        return True
+    return False
+
 
 # ── Company normalisation for dedup hash ───────────────────────────────────────
 
@@ -264,6 +373,21 @@ def _check_seniority_by_track(title: str, description: str, track: str) -> tuple
 def _check_geography(location: str) -> tuple[bool, str]:
     if not location:
         return True, "no_location"
+
+    codes = _focus_codes()
+    if codes:
+        # Strict focus mode: keep ONLY the target countries (+ generic remote /
+        # Europe-wide postings that do not name an out-of-focus place).
+        if _target_geo_re(codes).search(location):
+            return True, "in_focus"
+        other = _other_geo_re(codes)
+        names_other = bool(other is not None and other.search(location)) or bool(_NON_EU.search(location))
+        if _GENERIC_REMOTE.search(location) and not names_other:
+            return True, "remote_in_focus"
+        print(f"    [Geo] Outside focus ({','.join(codes)}) rejected: {location!r}")
+        return False, "outside_focus"
+
+    # Legacy EU-wide behaviour (GEO_COUNTRIES explicitly empty).
     if _NON_EU.search(location):
         if re.search(r"\b(anywhere|worldwide)\b", location, re.IGNORECASE):
             return True, "remote_worldwide"
@@ -284,6 +408,17 @@ def _check_language(lang: str, conf: float, role_cat: str) -> tuple[bool, str]:
     if lang != "en" and role_cat in _TRACK_A:
         return False, f"non_en_track_a:{lang}"
     return True, "default_accept"
+
+
+def _check_mandatory_language_requirement(title: str, description: str) -> tuple[bool, str]:
+    """Reject JDs that make any non-English language mandatory.
+
+    Reuses the central eligibility language gate so search-time acquisition and
+    scoring-time eligibility agree. English requirements pass; non-English
+    preferences such as "Italian is a plus" pass through for scoring.
+    """
+    text = "\n".join(part for part in (title, description) if part)
+    return check_language_gate(text)
 
 
 def _assign_track(role_category: str) -> str:
@@ -385,7 +520,7 @@ def fetch_lever(company: str, ats_id: str) -> list[dict]:
         return []
 
 
-# ── More ATS connectors (free official public APIs, no Apify needed) ───────────
+# ── More ATS connectors (free official public APIs) ───────────────────────────
 
 def _norm_ashby(raw: dict, company: str, fetched: date) -> dict:
     loc = raw.get("location")
@@ -501,11 +636,23 @@ def _process_job(job: dict, exclude_keywords: list[str], stats: dict) -> Optiona
         stats["rejected_geography"] = stats.get("rejected_geography", 0) + 1
         return None
 
-    lang_code, lang_conf = _detect_language(description or title)
-
-    ok, _ = _check_language(lang_code, lang_conf, role_category)
+    ok, language_reason = _check_mandatory_language_requirement(title, description)
     if not ok:
         stats["rejected_language"] = stats.get("rejected_language", 0) + 1
+        reason_label = (language_reason or "mandatory_non_english").split(":", 1)[0]
+        stats.setdefault("by_language_reason", {})[reason_label] = (
+            stats.setdefault("by_language_reason", {}).get(reason_label, 0) + 1
+        )
+        return None
+
+    lang_code, lang_conf = _detect_language(description or title)
+
+    ok, language_reason = _check_language(lang_code, lang_conf, role_category)
+    if not ok:
+        stats["rejected_language"] = stats.get("rejected_language", 0) + 1
+        stats.setdefault("by_language_reason", {})[language_reason] = (
+            stats.setdefault("by_language_reason", {}).get(language_reason, 0) + 1
+        )
         return None
 
     dedup_hash = _compute_dedup_hash(company, title, location)
@@ -699,6 +846,8 @@ def _print_summary(stats: dict, xlsx_path: Optional[Path]) -> None:
         print(f"    ↳ {_reason:<34}: {_n}")
     print(f"  Rejected — geography       : {stats.get('rejected_geography', 0)}")
     print(f"  Rejected — language        : {stats.get('rejected_language', 0)}")
+    for _reason, _n in sorted(stats.get("by_language_reason", {}).items()):
+        print(f"    ↳ {_reason:<34}: {_n}")
     print(f"  Rejected — missing fields  : {stats.get('rejected_other', 0)}")
     print("─" * 54)
     for track, n in sorted(stats.get("by_track", {}).items()):
@@ -716,19 +865,18 @@ def _print_summary(stats: dict, xlsx_path: Optional[Path]) -> None:
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 def _run_public_boards(profile: dict, stats: dict) -> None:
-    """Search aggregators/portals (Adzuna free API + LinkedIn/Indeed/WTTJ via Apify)
-    and process results through the same dedup/gating/persistence as ATS jobs.
-    No-op for any source whose credentials are absent."""
-    from agents import adzuna_search, apify_search
+    """Search Adzuna and process results through dedup/gating/persistence.
+    No-op when Adzuna credentials are absent."""
+    from agents import adzuna_search
 
-    jobs = adzuna_search.search_adzuna(profile) + apify_search.search_public_boards(profile)
+    jobs = adzuna_search.search_adzuna(profile)
     if not jobs:
         return
-    print(f"[Public] {len(jobs)} job(s) from public boards (LinkedIn/Indeed/WTTJ)")
+    print(f"[Adzuna] {len(jobs)} job(s) from Adzuna")
     exclude_kws = profile.get("application_preferences", {}).get("exclude_title_keywords", [])
     for job in jobs:
         _process_job(job, exclude_kws, stats)
-    database.log_search(query="public_boards", job_board="apify",
+    database.log_search(query="adzuna", job_board="adzuna",
                         jobs_found=len(jobs), filters_used={})
 
 
@@ -755,7 +903,7 @@ def run() -> None:
     print("\n[Search Agent] ATS watchlist run starting...")
     _run_watch_mode(profile, stats)
     _run_career_sites(profile, stats)    # company career pages (JSON-LD / RSS)
-    _run_public_boards(profile, stats)   # LinkedIn/Indeed/WTTJ via Apify (if enabled)
+    _run_public_boards(profile, stats)   # Adzuna aggregator (if enabled)
 
     today_str = date.today().isoformat()
     xlsx_path = Path(config.OUTPUTS_DIR) / "exports" / f"jobs_master_{today_str}.xlsx"

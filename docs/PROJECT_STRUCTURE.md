@@ -272,10 +272,11 @@ Every agent that needs the profile calls `profile_loader.load()`. None of them o
 ---
 
 ### `.env`
-Contains two lines:
+Contains:
 ```
 ANTHROPIC_API_KEY=sk-ant-...
-APIFY_API_KEY=apify_api_...
+ADZUNA_APP_ID=...
+ADZUNA_APP_KEY=...
 ```
 Never written into any Python file. Never committed to git. `.env.example` is the safe version that shows the structure with placeholder values — this one is safe to share.
 

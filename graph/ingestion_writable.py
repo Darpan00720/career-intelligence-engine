@@ -61,7 +61,7 @@ class WatchlistSource:
     persistence is the node's job (so dedup/gating run in one place)."""
 
     def fetch(self) -> list[dict]:
-        from agents import apify_search, career_site_search
+        from agents import career_site_search
         from agents.search_agent import fetch_company
 
         out: list[dict] = []
@@ -84,7 +84,6 @@ class WatchlistSource:
             from core.profile_loader import load as load_profile
             profile = load_profile()
             out += adzuna_search.search_adzuna(profile)          # Adzuna free API
-            out += apify_search.search_public_boards(profile)    # LinkedIn/Indeed/WTTJ (Apify)
         except Exception as exc:
             logger.warning("aggregator search failed: %s", exc)
         return out

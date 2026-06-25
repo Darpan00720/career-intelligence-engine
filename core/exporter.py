@@ -289,6 +289,23 @@ def export_jobs_master_xlsx(output_path: str | None = None) -> str:
     if intern_only():
         ranked = [r for r in ranked if is_intern_role(r.get("title"))]
 
+    # GEO_COUNTRIES focus (e.g. "it,nl"): drop rows located outside the focus, so
+    # out-of-focus rows already scored in the DB don't appear on the dashboard.
+    from agents.search_agent import geo_outside_focus
+    ranked = [r for r in ranked if not geo_outside_focus(r.get("location"))]
+
+    # English-sufficient (always): re-run the mandatory-language gate on each row's
+    # JD here so rows scored BEFORE the gate was tightened (e.g. "Italian (fluent)"
+    # hidden behind HTML) are also dropped from the dashboard. The gate strips HTML
+    # and only fails on hard requirements (a "plus/preferred" still passes).
+    from core.eligibility import check_language_gate
+    ranked = [r for r in ranked if check_language_gate(r.get("description") or "")[0]]
+
+    # English-only (NON_ENGLISH_AUTO_REJECT): additionally drop rows whose JD is
+    # written in a non-English language (HIGH language_risk) — proxy for "needs it".
+    if config.NON_ENGLISH_AUTO_REJECT:
+        ranked = [r for r in ranked if (r.get("language_risk") or "LOW") != "HIGH"]
+
     # Enrich each row with the derived dashboard fields.
     for row in ranked:
         row["country"]            = _derive_country(row.get("location"))

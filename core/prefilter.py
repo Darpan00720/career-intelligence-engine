@@ -9,11 +9,12 @@ downstream nodes.
 Rejection rules (in order):
   1. expired         — job["is_expired"] is truthy
   2. duplicate       — same (company, title, location) seen already
-  3. geo_rejected    — location clearly outside the EU target geography
+  3. geo_rejected    — location clearly outside the active geo focus
+                       (GEO_COUNTRIES defaults to "it,nl"; empty = legacy EU-wide)
   4. role_rejected   — title not in the broad target-domain keyword set
 
-Pure function, no I/O. Geo uses the existing EU/non-EU pattern from the search
-agent (reused, not reinvented) so behavior stays consistent.
+Pure function, no I/O. Geo delegates to agents.search_agent.geo_outside_focus
+(single source of truth) so search, ingestion, prefilter and export agree.
 """
 from __future__ import annotations
 
@@ -34,8 +35,6 @@ ROLE_KEYWORDS = [
     "innovation",
 ]
 
-_WORLDWIDE = re.compile(r"\b(anywhere|worldwide)\b", re.IGNORECASE)
-
 # Clearly-senior title markers — the candidate targets internship/junior roles,
 # so these are rejected unless the title also carries an intern/graduate signal
 # (e.g. "Senior ... Internship"). "Product Manager" alone is NOT senior.
@@ -53,14 +52,14 @@ def _dedup_key(job: dict) -> tuple:
 
 
 def _geo_rejected(location: str | None) -> bool:
-    """True only when the location is *clearly* outside the EU target geography.
-    Missing / unknown locations are NOT rejected here (downstream gates decide)."""
+    """True only when the location is *clearly* outside the active geo focus.
+    Missing / remote / unknown locations are NOT rejected here (downstream gates
+    decide). GEO_COUNTRIES defaults to "it,nl"; set it to an explicit empty
+    string to reject only clearly non-EU locations (legacy)."""
     if not location:
         return False
-    from agents.search_agent import _NON_EU  # reuse existing pattern, no new logic
-    if _NON_EU.search(location) and not _WORLDWIDE.search(location):
-        return True
-    return False
+    from agents.search_agent import geo_outside_focus  # single source of truth
+    return geo_outside_focus(location)
 
 
 def _role_rejected(title: str | None) -> bool:

@@ -1,5 +1,13 @@
 # Phase 2 Requirements — Job Search Agent
 
+> **⚠️ SUPERSEDED (sourcing strategy).** This document's original design used
+> **Apify** to scrape LinkedIn/Indeed/WTTJ. The implementation **no longer uses
+> Apify**. Job sourcing is now: the **Adzuna** free REST API (aggregates many
+> boards with strong EU coverage) plus **native ATS public APIs** (Greenhouse,
+> Lever, Ashby, SmartRecruiters) and JSON-LD/RSS career-site connectors — no
+> scraping, no Apify dependency. Every "Apify" reference below is historical
+> context only. The filtering/scoring/eligibility requirements still apply.
+
 ## Document Purpose
 
 This document is the complete specification for the Phase 2 Job Search Agent. It defines every design decision, algorithm, data structure, source strategy, filtering rule, cost model, and risk that must be understood before a single line of code is written.

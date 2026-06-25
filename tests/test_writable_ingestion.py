@@ -17,8 +17,8 @@ _SEED = [
      "description": "Internship for an aspiring product manager based in Milan. " * 3,
      "job_board": "seed", "posted_date": "2026-06-01"},
     {"title": "People Analytics Intern", "company": "Globex",
-     "location": "Berlin, Germany", "url": "https://globex.test/jobs/2",
-     "description": "A graduate internship in people analytics in Berlin. " * 3,
+     "location": "Amsterdam, Netherlands", "url": "https://globex.test/jobs/2",
+     "description": "A graduate internship in people analytics in Amsterdam. " * 3,
      "job_board": "seed", "posted_date": "2026-06-02"},
 ]
 

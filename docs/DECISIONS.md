@@ -31,7 +31,7 @@ Python is the dominant language for AI and data work. Every library this project
 |---|---|
 | Claude API | `anthropic` |
 | Agent workflows | `langgraph` |
-| Web scraping | `apify-client` |
+| Job search | Adzuna API + native ATS APIs (Greenhouse/Lever/Ashby/SmartRecruiters) |
 | Database | `sqlite3` (built into Python) |
 | Word documents | `python-docx` |
 | Excel files | `openpyxl` |
@@ -50,7 +50,7 @@ Python syntax reads almost like English. A line like `if job.score > 70:` is und
 
 ### Consequences
 **Positive:** Rich AI ecosystem, readable code, large community, easy to extend.
-**Negative:** Python runs slower than compiled languages like Go or Java. This is not a concern here — the bottleneck is network calls to Claude and Apify, not CPU computation.
+**Negative:** Python runs slower than compiled languages like Go or Java. This is not a concern here — the bottleneck is network calls to Claude and the job-search APIs, not CPU computation.
 
 ---
 
@@ -226,7 +226,7 @@ Research is cached per company — once researched, a company's dossier is reuse
 |---|---|
 | No company research; use job description only | Faster and cheaper; produces generic documents that do not stand out |
 | Incorporate research into resume/cover letter prompts | One large combined prompt is harder to maintain, harder to cache, harder to improve independently |
-| Use a web search API directly | More complex; would require parsing unstructured web pages; Apify already handles scraping — Claude handles synthesis |
+| Use a web search API directly | More complex; would require parsing unstructured web pages; the Adzuna API + native ATS APIs already return structured listings — Claude handles synthesis |
 
 ### Consequences
 **Positive:** Highly personalized documents; research cached per company; quality tier prevents hallucination.

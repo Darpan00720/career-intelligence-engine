@@ -33,6 +33,8 @@ os.environ.setdefault("ENABLE_EXPORT", "1")        # outputs/jobs_master.xlsx
 os.environ.setdefault("ENABLE_TRACKER", "1")       # application-tracker rows
 os.environ.setdefault("DB_JOB_LIMIT", "500")       # score all ~437 JDs, not just 10
 os.environ.setdefault("INTERN_ONLY", "1")          # keep ONLY internship/graduate roles
+os.environ.setdefault("GEO_COUNTRIES", "it,nl")    # focus: Netherlands + Italy only
+os.environ.setdefault("NON_ENGLISH_AUTO_REJECT", "1")  # English-only: drop non-English JDs
 
 from dotenv import load_dotenv
 

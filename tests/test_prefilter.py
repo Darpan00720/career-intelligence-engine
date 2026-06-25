@@ -116,6 +116,34 @@ class TestInternOnly(unittest.TestCase):
             self.assertEqual(len(kept), 1, title)   # intern override / not senior
 
 
+class TestGeoFocus(unittest.TestCase):
+    def test_focus_keeps_target_countries(self):
+        with patch.dict(os.environ, {"GEO_COUNTRIES": "it,nl"}):
+            for loc in ("Milan, Italy", "Rome", "Turin", "Amsterdam", "Rotterdam",
+                        "The Hague", "Remote", "Remote - Europe", "Remote (Italy)"):
+                kept, _ = prefilter_jobs([_job(location=loc)], None)
+                self.assertEqual(len(kept), 1, loc)
+
+    def test_focus_rejects_other_countries(self):
+        with patch.dict(os.environ, {"GEO_COUNTRIES": "it,nl"}):
+            for loc in ("Berlin, Germany", "London", "Madrid, Spain", "Paris",
+                        "Dublin, Ireland", "Hybrid - Berlin", "New York, USA"):
+                kept, stats = prefilter_jobs([_job(location=loc)], None)
+                self.assertEqual(kept, [], loc)
+                self.assertEqual(stats["geo_rejected"], 1, loc)
+
+    def test_romania_not_mistaken_for_italy(self):
+        # "roma" inside "Romania" must NOT false-match Italy focus.
+        with patch.dict(os.environ, {"GEO_COUNTRIES": "it,nl"}):
+            kept, stats = prefilter_jobs([_job(location="Bucharest, Romania")], None)
+            self.assertEqual(kept, [], "Romania should be outside it,nl focus")
+
+    def test_explicit_empty_focus_keeps_eu_wide(self):
+        with patch.dict(os.environ, {"GEO_COUNTRIES": ""}):
+            kept, _ = prefilter_jobs([_job(location="Berlin, Germany")], None)
+            self.assertEqual(len(kept), 1)   # legacy EU-wide keeps Berlin
+
+
 class TestPrefilterNode(unittest.TestCase):
     def test_node_executes_filters_and_emits_stats(self):
         from graph.nodes import EXECUTION_LOG, reset_execution_log

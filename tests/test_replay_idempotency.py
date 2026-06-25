@@ -28,9 +28,9 @@ _RAW = [
     {"title": "Product Manager Intern", "company": "Acme", "location": "Milan, Italy",
      "url": "https://acme.test/jobs/1", "job_board": "seed", "posted_date": "2026-06-01",
      "description": "Internship for an aspiring product manager in Milan. " * 3},
-    {"title": "People Analytics Intern", "company": "Globex", "location": "Berlin, Germany",
+    {"title": "People Analytics Intern", "company": "Globex", "location": "Amsterdam, Netherlands",
      "url": "https://globex.test/jobs/2", "job_board": "seed", "posted_date": "2026-06-02",
-     "description": "A graduate internship in people analytics in Berlin. " * 3},
+     "description": "A graduate internship in people analytics in Amsterdam. " * 3},
 ]
 
 

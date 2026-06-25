@@ -17,12 +17,23 @@ Usage:
     if not result.eligible:
         print(result.rejection_reason)
 """
+import html
 import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from core.company_eligibility import CompanyEligibilityProfile
+
+
+def _strip_html(text: str) -> str:
+    """Drop tags + unescape entities + collapse whitespace, so language/visa
+    phrases split across markup (e.g. "Italian</strong>&nbsp;(fluent)") match."""
+    if not text:
+        return ""
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = html.unescape(text)
+    return re.sub(r"\s+", " ", text).strip()
 
 
 # ── Soft-negator logic ─────────────────────────────────────────────────────────
@@ -100,6 +111,26 @@ _LANG_PATTERNS: list[tuple[re.Pattern, str]] = [
         re.IGNORECASE,
     ), "fluent_language"),
 
+    # "must speak Italian" / "required to communicate in Dutch"
+    (re.compile(
+        rf"\b(?:must|need(?:ed)?|required|expected)\s+(?:to\s+)?"
+        rf"(?:speak|write|communicate\s+in|work\s+in)\s+{_NON_EN}\b",
+        re.IGNORECASE,
+    ), "must_use_language"),
+
+    # "Dutch proficiency required" / "proficiency in Italian is mandatory"
+    (re.compile(
+        rf"\b{_NON_EN}\s+(?:language\s+)?(?:proficiency|fluency|command)\s+(?:is\s+)?{_REQ}\b"
+        rf"|\b(?:proficiency|fluency|command)\s+in\s+{_NON_EN}\s+(?:is\s+)?{_REQ}\b",
+        re.IGNORECASE,
+    ), "language_proficiency_required"),
+
+    # "Dutch-speaking role" / "Italian speaking internship"
+    (re.compile(
+        rf"\b{_NON_EN}[\s-]+speaking\b",
+        re.IGNORECASE,
+    ), "language_speaking_role"),
+
     # "native Italian" / "native German"
     (re.compile(
         rf"\bnative\s+(?:\w+\s+){{0,2}}{_NON_EN}\b",
@@ -164,6 +195,14 @@ _LANG_PATTERNS: list[tuple[re.Pattern, str]] = [
         rf"|\bonly\s+{_NON_EN}\s+speakers?\b",
         re.IGNORECASE,
     ), "language_speakers_only"),
+
+    # "Italian (fluent)" / "German (native)" / "Dutch (C1)" — language then level
+    # in parentheses. Common ATS phrasing (e.g. Doctolib: "Italian (fluent) and
+    # English (fluent)"). A nearby softener ("(fluent) is a plus") still downgrades.
+    (re.compile(
+        rf"\b{_NON_EN}\s*\(\s*(?:fluent|fluency|native|mother[\s-]?tongue|c[12]|b2)\s*\)",
+        re.IGNORECASE,
+    ), "language_level_parenthetical"),
 ]
 
 
@@ -174,6 +213,7 @@ def check_language_gate(description: str) -> tuple[bool, str]:
     FAIL only when a hard-reject signal is NOT softened by a nearby qualifier.
     Empty description → PASS (can't reject on absence of evidence).
     """
+    description = _strip_html(description)
     if not description or len(description.strip()) < 5:
         return True, ""
 
@@ -270,6 +310,7 @@ def check_visa_gate(description: str) -> tuple[bool, str]:
     Returns (eligible: bool, rejection_reason: str).
     Empty description → PASS.
     """
+    description = _strip_html(description)
     if not description or len(description.strip()) < 5:
         return True, ""
 

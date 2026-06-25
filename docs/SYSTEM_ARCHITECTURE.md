@@ -98,7 +98,7 @@ profile = json.load(open("data/candidate_profile.json"))
 | Database | SQLite | A single file on your computer — no server needed, zero setup |
 | Documents | python-docx | Generates real Word (.docx) resume and cover letter files |
 | Excel Export | openpyxl | Writes `jobs_master.xlsx` and `applications.xlsx` |
-| Job Search | Apify | Reliably scrapes LinkedIn, Indeed, Glassdoor without being blocked |
+| Job Search | Adzuna API + native ATS APIs | Adzuna (free REST API) aggregates many boards; Greenhouse/Lever/Ashby/SmartRecruiters via their official public APIs — no scraping |
 | Prompts | `.txt` files in `prompts/` | AI instructions stored as editable text — never hardcoded in Python |
 | Candidate Data | `data/candidate_profile.json` | Single source of truth — never hardcoded in any agent |
 | Skills Taxonomy | `data/skill_dictionary.json` | Normalizes job description keywords into standard categories before Claude analysis — improves scoring consistency |
@@ -430,10 +430,10 @@ Step 8:  applications.xlsx reflects live status: Applied, Interview, Offer, Reje
 
 ## Privacy and Security
 
-- API keys (Claude, Apify) are in `.env` — never committed to git, never shared
+- API keys (Claude, Adzuna) are in `.env` — never committed to git, never shared
 - `data/candidate_profile.json` lives locally on your machine only
 - The database (`career_agent.db`) is a single file on your computer — no cloud, no servers
-- No data leaves your machine except API calls to Claude (job description + profile) and Apify (search queries)
+- No data leaves your machine except API calls to Claude (job description + profile) and Adzuna (search queries)
 - `prompts/` files contain no personal data — they are safe to share or version-control
 
 ---

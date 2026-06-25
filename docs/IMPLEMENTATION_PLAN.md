@@ -311,12 +311,11 @@ These files exist from Phase 1 even though their content is written in later pha
 **Goal:** The agent finds real jobs, saves them to the database, and writes the initial `jobs_master.xlsx`.
 
 ### Tasks
-1. Sign up for Apify — get API key, add to `.env`
+1. Register a free Adzuna API account — add `ADZUNA_APP_ID` / `ADZUNA_APP_KEY` to `.env`
 2. Build `agents/search_agent.py`:
    - Load target roles and geography from `profile_loader.load()` — no hardcoded search terms
-   - Search LinkedIn Jobs via Apify
-   - Search Indeed Europe via Apify
-   - Search InfoJobs (Italy) and StepStone (Europe) via Apify
+   - Search via the Adzuna REST API (aggregates LinkedIn/Indeed/company sites, strong EU coverage)
+   - Pull directly from native ATS public APIs: Greenhouse, Lever, Ashby, SmartRecruiters
    - Parse results into `jobs` table format
    - Deduplicate: skip jobs already in database (match on company + title + location)
 3. Log each search run to the `searches` table

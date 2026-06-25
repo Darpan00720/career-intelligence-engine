@@ -59,6 +59,19 @@ class TestLanguageGateHardReject(unittest.TestCase):
     def test_italian_required(self):
         self.assertTrue(_lang_fail("Italian required for this role."))
 
+    def test_language_level_parenthetical(self):
+        # "Italian (fluent) and English (fluent)" — both mandatory (Doctolib-style)
+        self.assertTrue(_lang_fail("Languages: Italian (fluent) and English (fluent)."))
+
+    def test_language_level_parenthetical_through_html(self):
+        # HTML tags + entities between the words must not hide the requirement
+        self.assertTrue(_lang_fail(
+            'Requirements: <strong>Italian</strong>&nbsp;(fluent) and English (fluent).'))
+
+    def test_parenthetical_softened_is_a_plus(self):
+        # "(fluent) is a plus" → preference, not a hard requirement → PASS
+        self.assertTrue(_lang_pass("Italian (fluent) is a plus, but not required."))
+
     def test_fluent_italian_required(self):
         self.assertTrue(_lang_fail("Fluent Italian required to communicate with local clients."))
 
@@ -146,6 +159,15 @@ class TestLanguageGateHardReject(unittest.TestCase):
 
     def test_italian_speakers_only(self):
         self.assertTrue(_lang_fail("Italian speakers only need apply."))
+
+    def test_must_speak_italian(self):
+        self.assertTrue(_lang_fail("Candidates must speak Italian for local stakeholder meetings."))
+
+    def test_dutch_proficiency_required(self):
+        self.assertTrue(_lang_fail("Dutch proficiency is required for this internship."))
+
+    def test_dutch_speaking_role(self):
+        self.assertTrue(_lang_fail("Dutch-speaking AI product internship."))
 
 
 # ── Language gate: pass-through signals from the user spec ────────────────────

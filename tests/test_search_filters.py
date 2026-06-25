@@ -12,6 +12,7 @@ Or:        python3 tests/test_search_filters.py
 """
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -23,6 +24,7 @@ from agents.search_agent import (
     _SENIORITY_REJECT,
     _TRACK_A,
     _TRACK_B,
+    _process_job,
 )
 
 
@@ -496,6 +498,68 @@ class TestRegexSanity(unittest.TestCase):
 
 import re  # needed for test_partnership_does_not_trigger_partner_reject inline check
 
+class TestSearchAcquisitionRules(unittest.TestCase):
+    def _job(self, *, location="Amsterdam, Netherlands", description="Great English-speaking internship."):
+        return {
+            "title": "AI Product Intern",
+            "company": "Acme",
+            "location": location,
+            "url": "https://example.com/job",
+            "description": description,
+            "job_board": "unit",
+        }
+
+    def test_rejects_mandatory_non_english_language(self):
+        stats = {}
+        with patch.dict("os.environ", {"GEO_COUNTRIES": "it,nl"}):
+            jid = _process_job(
+                self._job(description="English team, but Dutch required for daily operations."),
+                [],
+                stats,
+            )
+        self.assertIsNone(jid)
+        self.assertEqual(stats.get("rejected_language"), 1)
+        self.assertIn("language_required", stats.get("by_language_reason", {}))
+
+    def test_allows_non_english_preference(self):
+        stats = {}
+        with patch.dict("os.environ", {"GEO_COUNTRIES": "it,nl"}), \
+                patch("agents.search_agent.database.get_job_by_hash", return_value=None), \
+                patch("agents.search_agent.database.get_job_by_url", return_value=None), \
+                patch("agents.search_agent.database.insert_job", return_value=42), \
+                patch("agents.search_agent.database.update_job_classification") as update_cls:
+            jid = _process_job(
+                self._job(description=(
+                    "This is an English-speaking AI product internship. "
+                    "Italian is a plus but not required for the role."
+                )),
+                [],
+                stats,
+            )
+        self.assertEqual(jid, 42)
+        self.assertEqual(stats.get("accepted"), 1)
+        update_cls.assert_called_once()
+
+    def test_rejects_outside_focus_when_configured(self):
+        # GEO_COUNTRIES=it,nl (set by run_graph.py / .env) rejects out-of-focus.
+        stats = {}
+        with patch.dict("os.environ", {"GEO_COUNTRIES": "it,nl"}):
+            jid = _process_job(self._job(location="Berlin, Germany"), [], stats)
+        self.assertIsNone(jid)
+        self.assertEqual(stats.get("rejected_geography"), 1)
+
+    def test_keeps_eu_wide_when_focus_unset(self):
+        # No GEO_COUNTRIES → legacy EU-wide: Berlin is accepted.
+        stats = {}
+        with patch.dict("os.environ", {}, clear=True), \
+                patch("agents.search_agent.database.get_job_by_hash", return_value=None), \
+                patch("agents.search_agent.database.get_job_by_url", return_value=None), \
+                patch("agents.search_agent.database.insert_job", return_value=7), \
+                patch("agents.search_agent.database.update_job_classification"):
+            jid = _process_job(self._job(location="Berlin, Germany"), [], stats)
+        self.assertEqual(jid, 7)
+
+
 if __name__ == "__main__":
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
@@ -510,6 +574,7 @@ if __name__ == "__main__":
         TestDigitalTransformationTrackA,
         TestTrackSetMembership,
         TestRegexSanity,
+        TestSearchAcquisitionRules,
     ]:
         suite.addTests(loader.loadTestsFromTestCase(cls))
 

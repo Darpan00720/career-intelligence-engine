@@ -1,6 +1,11 @@
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.parent
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    return os.getenv(name, str(default)).strip().lower() in ("1", "true", "yes", "on")
 
 # --- File paths ---
 PROFILE_PATH    = BASE_DIR / "data" / "candidate_profile.json"
@@ -24,9 +29,13 @@ RESEARCH_MODERATE_MAX = 6   # 4–6 → Moderate → company_aware
 MAX_DOCUMENT_RETRIES = 2
 
 # --- Language Detection ---
-# Set True to automatically reject JDs whose primary language is not English.
-# When False (default) non-English JDs are flagged for human review but still scored.
-NON_ENGLISH_AUTO_REJECT   = False
+# Reject JDs whose primary language is not English (a strong proxy for "this role
+# expects a non-English language"). Driven by env NON_ENGLISH_AUTO_REJECT so it can
+# be toggled per run/.env. When False, non-English JDs are flagged but still scored.
+# NOTE: the eligibility language gate (core.eligibility.check_language_gate) ALWAYS
+# hard-rejects JDs that explicitly *require* a non-English language, independent of
+# this flag — this flag only adds rejection of JDs entirely written in non-English.
+NON_ENGLISH_AUTO_REJECT   = _env_bool("NON_ENGLISH_AUTO_REJECT", False)
 LANG_DETECT_MIN_CHARS     = 50    # below this, detection is unreliable → "Unknown"
 LANG_DETECT_SAMPLE_CHARS  = 3000  # feed only the first N chars to the detector
 
