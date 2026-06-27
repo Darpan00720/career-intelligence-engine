@@ -79,7 +79,7 @@ specialized agents, each responsible for one slice of the search:
 | 3 | **Scoring** | Rates each role 0–100 — role fit, semantic skills match, location, seniority — with an optional LLM adjustment |
 | 4 | **Research** | Gathers company context for the strong matches |
 | 5 | **Recommendation** | Prioritizes and ranks what's actually worth applying to |
-| 6 | **Documents** | Drafts a tailored résumé + cover letter |
+| 6 | **Documents** | Drafts a tailored résumé + cover letter, **grounded with RAG** — it retrieves the most relevant bits of my own experience for that job, so the letter cites real, specific achievements instead of generic filler |
 | 7 | **Export / Tracker** | Writes the ranked Excel dashboard and logs applications |
 
 The whole run is a LangGraph workflow with its state checkpointed to SQLite, so it
@@ -161,7 +161,7 @@ configurable via environment variables, so you can point it at your own search:
 | Language | Python |
 | Agent orchestration | LangGraph |
 | LLMs | Claude (default) · OpenAI / ChatGPT · Gemini · Azure · local — via a provider gateway |
-| Semantic matching | Sentence Transformers (`all-MiniLM-L6-v2`) |
+| Semantic matching / RAG | Sentence Transformers (`all-MiniLM-L6-v2`) — CV↔JD scoring + retrieval to ground cover-letter generation |
 | API | FastAPI |
 | Storage | SQLite |
 | Documents | python-docx (résumé + cover letter) |

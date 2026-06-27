@@ -48,6 +48,25 @@ def _research_context(job_id: int) -> str:
         return research.get("mission", "") or "No company research available."
 
 
+def _retrieved_context(profile: dict, job: dict) -> str:
+    """RAG: when ENABLE_RAG is set, retrieve the candidate's most relevant
+    experience for THIS job so the letter is grounded in real, specific
+    achievements rather than the whole profile. Returns "" when disabled or
+    unavailable (the full profile JSON below is then the only grounding)."""
+    from core import retrieval
+    if not retrieval.is_enabled():
+        return ""
+    hits = retrieval.retrieve(job, profile, k=6)
+    if not hits:
+        return ""
+    return (
+        "\n---\nMOST RELEVANT EXPERIENCE FOR THIS ROLE "
+        "(retrieved from the candidate's history — ground the letter in these "
+        "specific points; do NOT invent experience):\n"
+        + retrieval.format_for_prompt(hits) + "\n"
+    )
+
+
 def _build_message(prompt_name: str, profile: dict, job: dict, research_ctx: str) -> str:
     instructions = load(prompt_name)
     return f"""{instructions}
@@ -55,7 +74,7 @@ def _build_message(prompt_name: str, profile: dict, job: dict, research_ctx: str
 ---
 CANDIDATE PROFILE (JSON):
 {json.dumps(profile, ensure_ascii=False)[:6000]}
-
+{_retrieved_context(profile, job)}
 ---
 TARGET JOB
 Title   : {job.get('title', '')}

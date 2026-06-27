@@ -122,7 +122,7 @@ def run_demo() -> None:
         "ENABLE_ACQUISITION": "0", "ENABLE_CLAUDE_SCORING": "0", "ENABLE_RESEARCH": "0",
         "ENABLE_DOCUMENTS": "0", "PERSIST_SCORES": "1", "ENABLE_EXPORT": "0",
         "ENABLE_TRACKER": "0", "INTERN_ONLY": "1", "GEO_COUNTRIES": "it,nl",
-        "NON_ENGLISH_AUTO_REJECT": "true", "DB_JOB_LIMIT": "100",
+        "NON_ENGLISH_AUTO_REJECT": "true", "DB_JOB_LIMIT": "100", "ENABLE_RAG": "1",
     })
     config.NON_ENGLISH_AUTO_REJECT = True   # read at import; force it for the demo
 
@@ -142,6 +142,27 @@ def run_demo() -> None:
         company = j.company if j else "?"
         title = (j.title if j else str(sj.job_id))[:44]
         print(f"  {sj.total_score:>3}  {company} — {title}")
+
+    # RAG preview (free — retrieval only, no LLM credit): for the top match, show
+    # which of the candidate's real experiences would ground its cover letter.
+    try:
+        from core import retrieval
+        from core.profile_loader import load as _load_profile
+        if scored:
+            top = sorted(scored, key=lambda s: s.total_score or 0, reverse=True)[0]
+            with database.get_connection() as conn:
+                row = conn.execute("SELECT title, company, description FROM jobs WHERE id=?",
+                                   (top.job_id,)).fetchone()
+            if row:
+                hits = retrieval.retrieve(dict(row), _load_profile(), k=4)
+                if hits:
+                    print(f"\nRAG — experiences retrieved to ground the cover letter for "
+                          f"'{row['title']}':")
+                    for h in hits:
+                        print(f"  ({h['score']:.2f}) {h['text'][:88]}")
+    except Exception:
+        pass
+
     print(f"\nWrote {out}")
     print("Filtered out: roles outside NL/Italy (Berlin), non-internships (Senior PM),\n"
           "and roles requiring a non-English language (Italian-required sales).")
